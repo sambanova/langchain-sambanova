@@ -10,36 +10,60 @@ pip install -U langchain-sambanova
 
 And you should configure credentials by setting the following environment variables:
 
-* TODO: fill this out
+If you are a SambaNovaCloud user:
+
+```bash
+export SAMBANOVA_API_KEY="your-sambanova-cloud-api-key-here"
+```
+
+or if you are SambaStudio User
+
+```bash
+export SAMBASTUDIO_API_KEY="your-sambastudi0o-api-key-here"
+```
+> You can obtain a free SambaNovaCloud API key [here](https://cloud.sambanova.ai/)
 
 ## Chat Models
 
-`ChatSambaNova` class exposes chat models from SambaNova.
+### SambaNova Cloud
+
+`ChatSambaNovaCloud` class exposes chat models from SambaNovaCloud.
 
 ```python
-from langchain_sambanova import ChatSambaNova
+from langchain_sambanova import ChatSambaNovaCloud
 
-llm = ChatSambaNova()
-llm.invoke("Sing a ballad of LangChain.")
+llm = ChatSambaNovaCloud(
+    model = "Meta-Llama-3.3-70B-Instruct"
+    temperature = 0.7
+)
+llm.invoke("Tell me a joke about artificial intelligence.")
+```
+
+### SambaStudio
+
+`ChatSambaStudio` class exposes chat models from SambaStudio Platform.
+
+```python
+from langchain_sambanova import ChatSambaStudio
+
+llm = ChatSambaStudio(
+    model = "Meta-Llama-3.3-70B-Instruct"
+    temperature = 0.7
+)
+llm.invoke("Tell me a joke about artificial intelligence.")
 ```
 
 ## Embeddings
 
-`SambaNovaEmbeddings` class exposes embeddings from SambaNova.
+### SambaStudio Embeddings
+
+`SambaStudioEmbeddings` class exposes embeddings from SambaStudio platform.
 
 ```python
-from langchain_sambanova import SambaNovaEmbeddings
+from langchain_sambanova import SambaStudioEmbeddings
 
-embeddings = SambaNovaEmbeddings()
+embeddings = SambaStudioEmbeddings(
+    model = "e5-mistral-7b-instruct"
+)
 embeddings.embed_query("What is the meaning of life?")
-```
-
-## LLMs
-`SambaNovaLLM` class exposes LLMs from SambaNova.
-
-```python
-from langchain_sambanova import SambaNovaLLM
-
-llm = SambaNovaLLM()
-llm.invoke("The meaning of life is")
 ```
