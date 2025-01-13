@@ -19,7 +19,7 @@ export SAMBANOVA_API_KEY="your-sambanova-cloud-api-key-here"
 or if you are SambaStudio User
 
 ```bash
-export SAMBASTUDIO_API_KEY="your-sambastudi0o-api-key-here"
+export SAMBASTUDIO_API_KEY="your-sambastudio-api-key-here"
 ```
 > You can obtain a free SambaNovaCloud API key [here](https://cloud.sambanova.ai/)
 
