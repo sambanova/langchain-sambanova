@@ -1,6 +1,6 @@
 from importlib import metadata
 
-from langchain_sambanova.chat_models import ChatSambaStudio, ChatSambaNovaCloud
+from langchain_sambanova.chat_models import ChatSambaNovaCloud, ChatSambaStudio
 from langchain_sambanova.embeddings import SambaNovaEmbeddings
 
 try:

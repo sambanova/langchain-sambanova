@@ -2,8 +2,9 @@
 
 from typing import Type
 
-from langchain_sambanova.chat_models import ChatSambaNova
 from langchain_tests.integration_tests import ChatModelIntegrationTests
+
+from langchain_sambanova.chat_models import ChatSambaNova
 
 
 class TestChatParrotLinkIntegration(ChatModelIntegrationTests):

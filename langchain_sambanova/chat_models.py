@@ -69,25 +69,25 @@ def _convert_message_to_dict(message: BaseMessage) -> Dict[str, Any]:
     """
     message_dict: Dict[str, Any] = {}
     if isinstance(message, ChatMessage):
-        message_dict = {'role': message.role, 'content': message.content}
+        message_dict = {"role": message.role, "content": message.content}
     elif isinstance(message, SystemMessage):
-        message_dict = {'role': 'system', 'content': message.content}
+        message_dict = {"role": "system", "content": message.content}
     elif isinstance(message, HumanMessage):
-        message_dict = {'role': 'user', 'content': message.content}
+        message_dict = {"role": "user", "content": message.content}
     elif isinstance(message, AIMessage):
-        message_dict = {'role': 'assistant', 'content': message.content}
-        if 'tool_calls' in message.additional_kwargs:
-            message_dict['tool_calls'] = message.additional_kwargs['tool_calls']
-            if message_dict['content'] == '':
-                message_dict['content'] = None
+        message_dict = {"role": "assistant", "content": message.content}
+        if "tool_calls" in message.additional_kwargs:
+            message_dict["tool_calls"] = message.additional_kwargs["tool_calls"]
+            if message_dict["content"] == "":
+                message_dict["content"] = None
     elif isinstance(message, ToolMessage):
         message_dict = {
-            'role': 'tool',
-            'content': message.content,
-            'tool_call_id': message.tool_call_id,
+            "role": "tool",
+            "content": message.content,
+            "tool_call_id": message.tool_call_id,
         }
     else:
-        raise TypeError(f'Got unknown type {message}')
+        raise TypeError(f"Got unknown type {message}")
     return message_dict
 
 
@@ -255,13 +255,13 @@ class ChatSambaNovaCloud(BaseChatModel):
 
     """
 
-    sambanova_url: str = Field(default='')
+    sambanova_url: str = Field(default="")
     """SambaNova Cloud Url"""
 
-    sambanova_api_key: SecretStr = Field(default='')
+    sambanova_api_key: SecretStr = Field(default="")
     """SambaNova Cloud api key"""
 
-    model: str = Field(default='Meta-Llama-3.1-8B-Instruct')
+    model: str = Field(default="Meta-Llama-3.1-8B-Instruct")
     """The name of the model"""
 
     streaming: bool = Field(default=False)
@@ -279,7 +279,7 @@ class ChatSambaNovaCloud(BaseChatModel):
     top_k: Optional[int] = Field(default=None)
     """model top k"""
 
-    stream_options: Dict[str, Any] = Field(default={'include_usage': True})
+    stream_options: Dict[str, Any] = Field(default={"include_usage": True})
     """stream options, include usage to get generation metrics"""
 
     additional_headers: Dict[str, Any] = Field(default={})
@@ -295,7 +295,7 @@ class ChatSambaNovaCloud(BaseChatModel):
 
     @property
     def lc_secrets(self) -> Dict[str, str]:
-        return {'sambanova_api_key': 'sambanova_api_key'}
+        return {"sambanova_api_key": "sambanova_api_key"}
 
     @property
     def _identifying_params(self) -> Dict[str, Any]:
@@ -305,30 +305,30 @@ class ChatSambaNovaCloud(BaseChatModel):
         is used for tracing purposes make it possible to monitor LLMs.
         """
         return {
-            'model': self.model,
-            'streaming': self.streaming,
-            'max_tokens': self.max_tokens,
-            'temperature': self.temperature,
-            'top_p': self.top_p,
-            'top_k': self.top_k,
-            'stream_options': self.stream_options,
+            "model": self.model,
+            "streaming": self.streaming,
+            "max_tokens": self.max_tokens,
+            "temperature": self.temperature,
+            "top_p": self.top_p,
+            "top_k": self.top_k,
+            "stream_options": self.stream_options,
         }
 
     @property
     def _llm_type(self) -> str:
         """Get the type of language model used by this chat model."""
-        return 'sambanovacloud-chatmodel'
+        return "sambanovacloud-chatmodel"
 
     def __init__(self, **kwargs: Any) -> None:
         """init and validate environment variables"""
-        kwargs['sambanova_url'] = get_from_dict_or_env(
+        kwargs["sambanova_url"] = get_from_dict_or_env(
             kwargs,
-            'sambanova_url',
-            'SAMBANOVA_URL',
-            default='https://api.sambanova.ai/v1/chat/completions',
+            "sambanova_url",
+            "SAMBANOVA_URL",
+            default="https://api.sambanova.ai/v1/chat/completions",
         )
-        kwargs['sambanova_api_key'] = convert_to_secret_str(
-            get_from_dict_or_env(kwargs, 'sambanova_api_key', 'SAMBANOVA_API_KEY')
+        kwargs["sambanova_api_key"] = convert_to_secret_str(
+            get_from_dict_or_env(kwargs, "sambanova_api_key", "SAMBANOVA_API_KEY")
         )
         super().__init__(**kwargs)
 
@@ -351,26 +351,33 @@ class ChatSambaNovaCloud(BaseChatModel):
         if tool_choice:
             if isinstance(tool_choice, str):
                 # tool_choice is a tool/function name
-                if tool_choice not in ('auto', 'none', 'required'):
-                    tool_choice = 'auto'
+                if tool_choice not in ("auto", "none", "required"):
+                    tool_choice = "auto"
             elif isinstance(tool_choice, bool):
                 if tool_choice:
-                    tool_choice = 'required'
+                    tool_choice = "required"
             elif isinstance(tool_choice, dict):
-                raise ValueError("tool_choice must be one of ['auto', 'none', 'required']")
+                raise ValueError(
+                    "tool_choice must be one of ['auto', 'none', 'required']"
+                )
             else:
-                raise ValueError(f'Unrecognized tool_choice type. Expected str, bool' f'Received: {tool_choice}')
+                raise ValueError(
+                    f"Unrecognized tool_choice type. Expected str, bool"
+                    f"Received: {tool_choice}"
+                )
         else:
-            tool_choice = 'auto'
-        kwargs['tool_choice'] = tool_choice
-        kwargs['parallel_tool_calls'] = parallel_tool_calls
+            tool_choice = "auto"
+        kwargs["tool_choice"] = tool_choice
+        kwargs["parallel_tool_calls"] = parallel_tool_calls
         return super().bind(tools=formatted_tools, **kwargs)
 
     def with_structured_output(
         self,
         schema: Optional[Union[Dict[str, Any], Type[BaseModel]]] = None,
         *,
-        method: Literal['function_calling', 'json_mode', 'json_schema'] = 'function_calling',
+        method: Literal[
+            "function_calling", "json_mode", "json_schema"
+        ] = "function_calling",
         include_raw: bool = False,
         **kwargs: Any,
     ) -> Runnable[LanguageModelInput, Union[Dict[str, Any], BaseModel]]:
@@ -613,12 +620,15 @@ class ChatSambaNovaCloud(BaseChatModel):
 
         """  # noqa: E501
         if kwargs:
-            raise ValueError(f'Received unsupported arguments {kwargs}')
+            raise ValueError(f"Received unsupported arguments {kwargs}")
         is_pydantic_schema = _is_pydantic_class(schema)
-        if method == 'function_calling':
+        if method == "function_calling":
             if schema is None:
-                raise ValueError('`schema` must be specified when method is `function_calling`. Received None.')
-            tool_name = convert_to_openai_tool(schema)['function']['name']
+                raise ValueError(
+                    "`schema` must be specified when method is `function_calling`."
+                    " Received None."
+                )
+            tool_name = convert_to_openai_tool(schema)["function"]["name"]
             llm = self.bind_tools([schema], tool_choice=tool_name)
             if is_pydantic_schema:
                 output_parser: OutputParserLike[Any] = PydanticToolsParser(
@@ -626,8 +636,10 @@ class ChatSambaNovaCloud(BaseChatModel):
                     first_tool_only=True,
                 )
             else:
-                output_parser = JsonOutputKeyToolsParser(key_name=tool_name, first_tool_only=True)
-        elif method == 'json_mode':
+                output_parser = JsonOutputKeyToolsParser(
+                    key_name=tool_name, first_tool_only=True
+                )
+        elif method == "json_mode":
             llm = self
             # TODO bind response format when json mode available by API
             # llm = self.bind(response_format={"type": "json_object"})
@@ -637,9 +649,12 @@ class ChatSambaNovaCloud(BaseChatModel):
             else:
                 output_parser = JsonOutputParser()
 
-        elif method == 'json_schema':
+        elif method == "json_schema":
             if schema is None:
-                raise ValueError('`schema` must be specified when method is not `json_mode`. Received None.')
+                raise ValueError(
+                    "`schema` must be specified when method is not `json_mode`."
+                    " Received None."
+                )
             llm = self
             # TODO bind response format when json schema available by API,
             # update example
@@ -653,16 +668,18 @@ class ChatSambaNovaCloud(BaseChatModel):
                 output_parser = JsonOutputParser()
         else:
             raise ValueError(
-                f'Unrecognized method argument. Expected one of `function_calling` or '
-                f'`json_mode`. Received: `{method}`'
+                f"Unrecognized method argument. Expected one of `function_calling` or "
+                f"`json_mode`. Received: `{method}`"
             )
 
         if include_raw:
             parser_assign = RunnablePassthrough.assign(
-                parsed=itemgetter('raw') | output_parser, parsing_error=lambda _: None
+                parsed=itemgetter("raw") | output_parser, parsing_error=lambda _: None
             )
             parser_none = RunnablePassthrough.assign(parsed=lambda _: None)
-            parser_with_fallback = parser_assign.with_fallbacks([parser_none], exception_key='parsing_error')
+            parser_with_fallback = parser_assign.with_fallbacks(
+                [parser_none], exception_key="parsing_error"
+            )
             return RunnableMap(raw=llm) | parser_with_fallback
         else:
             return llm | output_parser
@@ -687,34 +704,34 @@ class ChatSambaNovaCloud(BaseChatModel):
         """
         if streaming:
             data = {
-                'messages': messages_dicts,
-                'max_tokens': self.max_tokens,
-                'stop': stop,
-                'model': self.model,
-                'temperature': self.temperature,
-                'top_p': self.top_p,
-                'top_k': self.top_k,
-                'stream': True,
-                'stream_options': self.stream_options,
+                "messages": messages_dicts,
+                "max_tokens": self.max_tokens,
+                "stop": stop,
+                "model": self.model,
+                "temperature": self.temperature,
+                "top_p": self.top_p,
+                "top_k": self.top_k,
+                "stream": True,
+                "stream_options": self.stream_options,
                 **kwargs,
             }
         else:
             data = {
-                'messages': messages_dicts,
-                'max_tokens': self.max_tokens,
-                'stop': stop,
-                'model': self.model,
-                'temperature': self.temperature,
-                'top_p': self.top_p,
-                'top_k': self.top_k,
+                "messages": messages_dicts,
+                "max_tokens": self.max_tokens,
+                "stop": stop,
+                "model": self.model,
+                "temperature": self.temperature,
+                "top_p": self.top_p,
+                "top_k": self.top_k,
                 **kwargs,
             }
         http_session = requests.Session()
         response = http_session.post(
             self.sambanova_url,
             headers={
-                'Authorization': f'Bearer {self.sambanova_api_key.get_secret_value()}',
-                'Content-Type': 'application/json',
+                "Authorization": f"Bearer {self.sambanova_api_key.get_secret_value()}",
+                "Content-Type": "application/json",
                 **self.additional_headers,
             },
             json=data,
@@ -722,8 +739,9 @@ class ChatSambaNovaCloud(BaseChatModel):
         )
         if response.status_code != 200:
             raise RuntimeError(
-                f'Sambanova /complete call failed with status code ' f'{response.status_code}.',
-                f'{response.text}.',
+                f"Sambanova /complete call failed with status code "
+                f"{response.status_code}.",
+                f"{response.text}.",
             )
         return response
 
@@ -739,48 +757,56 @@ class ChatSambaNovaCloud(BaseChatModel):
         """
         try:
             response_dict = response.json()
-            if response_dict.get('error'):
+            if response_dict.get("error"):
                 raise RuntimeError(
-                    f'Sambanova /complete call failed with status code ' f'{response.status_code}.',
-                    f'{response_dict}.',
+                    f"Sambanova /complete call failed with status code "
+                    f"{response.status_code}.",
+                    f"{response_dict}.",
                 )
         except Exception as e:
             raise RuntimeError(
-                f"Sambanova /complete call failed couldn't get JSON response {e}" f'response: {response.text}'
+                f"Sambanova /complete call failed couldn't get JSON response {e}"
+                f"response: {response.text}"
             )
-        content = response_dict['choices'][0]['message'].get('content', '')
+        content = response_dict["choices"][0]["message"].get("content", "")
         if content is None:
-            content = ''
+            content = ""
         additional_kwargs: Dict[str, Any] = {}
         tool_calls = []
         invalid_tool_calls = []
-        raw_tool_calls = response_dict['choices'][0]['message'].get('tool_calls')
+        raw_tool_calls = response_dict["choices"][0]["message"].get("tool_calls")
         if raw_tool_calls:
-            additional_kwargs['tool_calls'] = raw_tool_calls
+            additional_kwargs["tool_calls"] = raw_tool_calls
             for raw_tool_call in raw_tool_calls:
-                if isinstance(raw_tool_call['function']['arguments'], dict):
-                    raw_tool_call['function']['arguments'] = json.dumps(raw_tool_call['function'].get('arguments', {}))
+                if isinstance(raw_tool_call["function"]["arguments"], dict):
+                    raw_tool_call["function"]["arguments"] = json.dumps(
+                        raw_tool_call["function"].get("arguments", {})
+                    )
                 try:
                     tool_calls.append(parse_tool_call(raw_tool_call, return_id=True))
                 except Exception as e:
-                    invalid_tool_calls.append(make_invalid_tool_call(raw_tool_call, str(e)))
+                    invalid_tool_calls.append(
+                        make_invalid_tool_call(raw_tool_call, str(e))
+                    )
         message = AIMessage(
             content=content,
             additional_kwargs=additional_kwargs,
             tool_calls=tool_calls,
             invalid_tool_calls=invalid_tool_calls,
             response_metadata={
-                'finish_reason': response_dict['choices'][0]['finish_reason'],
-                'usage': response_dict.get('usage'),
-                'model_name': response_dict['model'],
-                'system_fingerprint': response_dict['system_fingerprint'],
-                'created': response_dict['created'],
+                "finish_reason": response_dict["choices"][0]["finish_reason"],
+                "usage": response_dict.get("usage"),
+                "model_name": response_dict["model"],
+                "system_fingerprint": response_dict["system_fingerprint"],
+                "created": response_dict["created"],
             },
-            id=response_dict['id'],
+            id=response_dict["id"],
         )
         return message
 
-    def _process_stream_response(self, response: Response) -> Iterator[BaseMessageChunk]:
+    def _process_stream_response(
+        self, response: Response
+    ) -> Iterator[BaseMessageChunk]:
         """
         Process a streaming response from the api
 
@@ -793,65 +819,80 @@ class ChatSambaNovaCloud(BaseChatModel):
         try:
             import sseclient
         except ImportError:
-            raise ImportError('could not import sseclient library' 'Please install it with `pip install sseclient-py`.')
+            raise ImportError(
+                "could not import sseclient library"
+                "Please install it with `pip install sseclient-py`."
+            )
 
         client = sseclient.SSEClient(response)
 
         for event in client.events():
-            if event.event == 'error_event':
+            if event.event == "error_event":
                 raise RuntimeError(
-                    f'Sambanova /complete call failed with status code ' f'{response.status_code}.' f'{event.data}.'
+                    f"Sambanova /complete call failed with status code "
+                    f"{response.status_code}."
+                    f"{event.data}."
                 )
 
             try:
                 # check if the response is a final event
                 # in that case event data response is '[DONE]'
-                if event.data != '[DONE]':
+                if event.data != "[DONE]":
                     if isinstance(event.data, str):
                         data = json.loads(event.data)
                     else:
                         raise RuntimeError(
-                            f'Sambanova /complete call failed with status code '
-                            f'{response.status_code}.'
-                            f'{event.data}.'
+                            f"Sambanova /complete call failed with status code "
+                            f"{response.status_code}."
+                            f"{event.data}."
                         )
-                    if data.get('error'):
+                    if data.get("error"):
                         raise RuntimeError(
-                            f'Sambanova /complete call failed with status code '
-                            f'{response.status_code}.'
-                            f'{event.data}.'
+                            f"Sambanova /complete call failed with status code "
+                            f"{response.status_code}."
+                            f"{event.data}."
                         )
                     metadata = {}
                     tool_calls = []
                     invalid_tool_calls = []
                     additional_kwargs = {}
-                    if len(data['choices']) > 0 and data['choices'][0].get('delta', {}) != {}:
-                        finish_reason = data['choices'][0].get('finish_reason')
-                        content = data['choices'][0]['delta'].get('content', '')
+                    if (
+                        len(data["choices"]) > 0
+                        and data["choices"][0].get("delta", {}) != {}
+                    ):
+                        finish_reason = data["choices"][0].get("finish_reason")
+                        content = data["choices"][0]["delta"].get("content", "")
                         if content is None:
-                            content = ''
-                        id = data['id']
-                        raw_tool_calls = data['choices'][0]['delta'].get('tool_calls')
+                            content = ""
+                        id = data["id"]
+                        raw_tool_calls = data["choices"][0]["delta"].get("tool_calls")
                         if raw_tool_calls:
-                            additional_kwargs['tool_calls'] = raw_tool_calls
+                            additional_kwargs["tool_calls"] = raw_tool_calls
                             for raw_tool_call in raw_tool_calls:
-                                if isinstance(raw_tool_call['function']['arguments'], dict):
-                                    raw_tool_call['function']['arguments'] = json.dumps(
-                                        raw_tool_call['function'].get('arguments', {})
+                                if isinstance(
+                                    raw_tool_call["function"]["arguments"], dict
+                                ):
+                                    raw_tool_call["function"]["arguments"] = json.dumps(
+                                        raw_tool_call["function"].get("arguments", {})
                                     )
                                 try:
-                                    tool_calls.append(parse_tool_call(raw_tool_call, return_id=True))
+                                    tool_calls.append(
+                                        parse_tool_call(raw_tool_call, return_id=True)
+                                    )
                                 except Exception as e:
-                                    invalid_tool_calls.append(make_invalid_tool_call(raw_tool_call, str(e)))
+                                    invalid_tool_calls.append(
+                                        make_invalid_tool_call(raw_tool_call, str(e))
+                                    )
                     else:
-                        content = ''
-                        id = data['id']
+                        content = ""
+                        id = data["id"]
                         metadata = {
-                            'finish_reason': finish_reason or data['choices'][0].get('finish_reason'),
-                            'usage': data.get('usage'),
-                            'model_name': data.get('model'),
-                            'system_fingerprint': data.get('system_fingerprint'),
-                            'created': data.get('created'),
+                            "finish_reason": finish_reason
+                            or data["choices"][0].get("finish_reason"),
+                            "usage": data.get("usage"),
+                            "model_name": data.get("model"),
+                            "system_fingerprint": data.get("system_fingerprint"),
+                            "created": data.get("created"),
                         }
                     chunk = AIMessageChunk(
                         content=content,
@@ -864,7 +905,10 @@ class ChatSambaNovaCloud(BaseChatModel):
                     yield chunk
 
             except Exception as e:
-                raise RuntimeError(f'Error getting content chunk raw streamed response: {e}' f'data: {event.data}')
+                raise RuntimeError(
+                    f"Error getting content chunk raw streamed response: {e}"
+                    f"data: {event.data}"
+                )
 
     def _generate(
         self,
@@ -890,7 +934,9 @@ class ChatSambaNovaCloud(BaseChatModel):
             result: ChatResult with model generation
         """
         if self.streaming:
-            stream_iter = self._stream(messages, stop=stop, run_manager=run_manager, **kwargs)
+            stream_iter = self._stream(
+                messages, stop=stop, run_manager=run_manager, **kwargs
+            )
             if stream_iter:
                 return generate_from_stream(stream_iter)
         messages_dicts = _create_message_dicts(messages)
@@ -898,7 +944,9 @@ class ChatSambaNovaCloud(BaseChatModel):
         message = self._process_response(response)
         generation = ChatGeneration(
             message=message,
-            generation_info={'finish_reason': message.response_metadata['finish_reason']},
+            generation_info={
+                "finish_reason": message.response_metadata["finish_reason"]
+            },
         )
         return ChatResult(generations=[generation])
 
@@ -1106,16 +1154,16 @@ class ChatSambaStudio(BaseChatModel):
             print(response.response_metadata)
     """
 
-    sambastudio_url: str = Field(default='')
+    sambastudio_url: str = Field(default="")
     """SambaStudio Url"""
 
-    sambastudio_api_key: SecretStr = Field(default='')
+    sambastudio_api_key: SecretStr = Field(default="")
     """SambaStudio api key"""
 
-    base_url: str = Field(default='', exclude=True)
+    base_url: str = Field(default="", exclude=True)
     """SambaStudio non streaming Url"""
 
-    streaming_url: str = Field(default='', exclude=True)
+    streaming_url: str = Field(default="", exclude=True)
     """SambaStudio streaming Url"""
 
     model: Optional[str] = Field(default=None)
@@ -1142,15 +1190,15 @@ class ChatSambaStudio(BaseChatModel):
     process_prompt: Optional[bool] = Field(default=True)
     """whether process prompt (for Bundle generic v1 and v2 endpoints)"""
 
-    stream_options: Dict[str, Any] = Field(default={'include_usage': True})
+    stream_options: Dict[str, Any] = Field(default={"include_usage": True})
     """stream options, include usage to get generation metrics"""
 
     special_tokens: Dict[str, Any] = Field(
         default={
-            'start': '<|begin_of_text|>',
-            'start_role': '<|begin_of_text|><|start_header_id|>{role}<|end_header_id|>',
-            'end_role': '<|eot_id|>',
-            'end': '<|start_header_id|>assistant<|end_header_id|>\n',
+            "start": "<|begin_of_text|>",
+            "start_role": "<|begin_of_text|><|start_header_id|>{role}<|end_header_id|>",
+            "end_role": "<|eot_id|>",
+            "end": "<|start_header_id|>assistant<|end_header_id|>\n",
         }
     )
     """start, start_role, end_role and end special tokens 
@@ -1175,8 +1223,8 @@ class ChatSambaStudio(BaseChatModel):
     @property
     def lc_secrets(self) -> Dict[str, str]:
         return {
-            'sambastudio_url': 'sambastudio_url',
-            'sambastudio_api_key': 'sambastudio_api_key',
+            "sambastudio_url": "sambastudio_url",
+            "sambastudio_api_key": "sambastudio_api_key",
         }
 
     @property
@@ -1187,32 +1235,36 @@ class ChatSambaStudio(BaseChatModel):
         is used for tracing purposes make it possible to monitor LLMs.
         """
         return {
-            'model': self.model,
-            'streaming': self.streaming,
-            'max_tokens': self.max_tokens,
-            'temperature': self.temperature,
-            'top_p': self.top_p,
-            'top_k': self.top_k,
-            'do_sample': self.do_sample,
-            'process_prompt': self.process_prompt,
-            'stream_options': self.stream_options,
-            'special_tokens': self.special_tokens,
-            'model_kwargs': self.model_kwargs,
+            "model": self.model,
+            "streaming": self.streaming,
+            "max_tokens": self.max_tokens,
+            "temperature": self.temperature,
+            "top_p": self.top_p,
+            "top_k": self.top_k,
+            "do_sample": self.do_sample,
+            "process_prompt": self.process_prompt,
+            "stream_options": self.stream_options,
+            "special_tokens": self.special_tokens,
+            "model_kwargs": self.model_kwargs,
         }
 
     @property
     def _llm_type(self) -> str:
         """Get the type of language model used by this chat model."""
-        return 'sambastudio-chatmodel'
+        return "sambastudio-chatmodel"
 
     def __init__(self, **kwargs: Any) -> None:
         """init and validate environment variables"""
-        kwargs['sambastudio_url'] = get_from_dict_or_env(kwargs, 'sambastudio_url', 'SAMBASTUDIO_URL')
-
-        kwargs['sambastudio_api_key'] = convert_to_secret_str(
-            get_from_dict_or_env(kwargs, 'sambastudio_api_key', 'SAMBASTUDIO_API_KEY')
+        kwargs["sambastudio_url"] = get_from_dict_or_env(
+            kwargs, "sambastudio_url", "SAMBASTUDIO_URL"
         )
-        kwargs['base_url'], kwargs['streaming_url'] = self._get_sambastudio_urls(kwargs['sambastudio_url'])
+
+        kwargs["sambastudio_api_key"] = convert_to_secret_str(
+            get_from_dict_or_env(kwargs, "sambastudio_api_key", "SAMBASTUDIO_API_KEY")
+        )
+        kwargs["base_url"], kwargs["streaming_url"] = self._get_sambastudio_urls(
+            kwargs["sambastudio_url"]
+        )
         super().__init__(**kwargs)
 
     def bind_tools(
@@ -1234,26 +1286,33 @@ class ChatSambaStudio(BaseChatModel):
         if tool_choice:
             if isinstance(tool_choice, str):
                 # tool_choice is a tool/function name
-                if tool_choice not in ('auto', 'none', 'required'):
-                    tool_choice = 'auto'
+                if tool_choice not in ("auto", "none", "required"):
+                    tool_choice = "auto"
             elif isinstance(tool_choice, bool):
                 if tool_choice:
-                    tool_choice = 'required'
+                    tool_choice = "required"
             elif isinstance(tool_choice, dict):
-                raise ValueError("tool_choice must be one of ['auto', 'none', 'required']")
+                raise ValueError(
+                    "tool_choice must be one of ['auto', 'none', 'required']"
+                )
             else:
-                raise ValueError(f'Unrecognized tool_choice type. Expected str, bool' f'Received: {tool_choice}')
+                raise ValueError(
+                    f"Unrecognized tool_choice type. Expected str, bool"
+                    f"Received: {tool_choice}"
+                )
         else:
-            tool_choice = 'auto'
-        kwargs['tool_choice'] = tool_choice
-        kwargs['parallel_tool_calls'] = parallel_tool_calls
+            tool_choice = "auto"
+        kwargs["tool_choice"] = tool_choice
+        kwargs["parallel_tool_calls"] = parallel_tool_calls
         return super().bind(tools=formatted_tools, **kwargs)
 
     def with_structured_output(
         self,
         schema: Optional[Union[Dict[str, Any], Type[BaseModel]]] = None,
         *,
-        method: Literal['function_calling', 'json_mode', 'json_schema'] = 'function_calling',
+        method: Literal[
+            "function_calling", "json_mode", "json_schema"
+        ] = "function_calling",
         include_raw: bool = False,
         **kwargs: Any,
     ) -> Runnable[LanguageModelInput, Union[Dict[str, Any], BaseModel]]:
@@ -1496,12 +1555,15 @@ class ChatSambaStudio(BaseChatModel):
 
         """  # noqa: E501
         if kwargs:
-            raise ValueError(f'Received unsupported arguments {kwargs}')
+            raise ValueError(f"Received unsupported arguments {kwargs}")
         is_pydantic_schema = _is_pydantic_class(schema)
-        if method == 'function_calling':
+        if method == "function_calling":
             if schema is None:
-                raise ValueError("schema must be specified when method is 'function_calling'. " 'Received None.')
-            tool_name = convert_to_openai_tool(schema)['function']['name']
+                raise ValueError(
+                    "schema must be specified when method is 'function_calling'. "
+                    "Received None."
+                )
+            tool_name = convert_to_openai_tool(schema)["function"]["name"]
             llm = self.bind_tools([schema], tool_choice=tool_name)
             if is_pydantic_schema:
                 output_parser: OutputParserLike[Any] = PydanticToolsParser(
@@ -1509,8 +1571,10 @@ class ChatSambaStudio(BaseChatModel):
                     first_tool_only=True,
                 )
             else:
-                output_parser = JsonOutputKeyToolsParser(key_name=tool_name, first_tool_only=True)
-        elif method == 'json_mode':
+                output_parser = JsonOutputKeyToolsParser(
+                    key_name=tool_name, first_tool_only=True
+                )
+        elif method == "json_mode":
             llm = self
             # TODO bind response format when json mode available by API
             # llm = self.bind(response_format={"type": "json_object"})
@@ -1520,9 +1584,12 @@ class ChatSambaStudio(BaseChatModel):
             else:
                 output_parser = JsonOutputParser()
 
-        elif method == 'json_schema':
+        elif method == "json_schema":
             if schema is None:
-                raise ValueError("schema must be specified when method is not 'json_mode'. " 'Received None.')
+                raise ValueError(
+                    "schema must be specified when method is not 'json_mode'. "
+                    "Received None."
+                )
             llm = self
             # TODO bind response format when json schema available by API,
             # update example
@@ -1542,10 +1609,12 @@ class ChatSambaStudio(BaseChatModel):
 
         if include_raw:
             parser_assign = RunnablePassthrough.assign(
-                parsed=itemgetter('raw') | output_parser, parsing_error=lambda _: None
+                parsed=itemgetter("raw") | output_parser, parsing_error=lambda _: None
             )
             parser_none = RunnablePassthrough.assign(parsed=lambda _: None)
-            parser_with_fallback = parser_assign.with_fallbacks([parser_none], exception_key='parsing_error')
+            parser_with_fallback = parser_assign.with_fallbacks(
+                [parser_none], exception_key="parsing_error"
+            )
             return RunnableMap(raw=llm) | parser_with_fallback
         else:
             return llm | output_parser
@@ -1561,17 +1630,17 @@ class ChatSambaStudio(BaseChatModel):
             str: Role of the LangChain BaseMessage
         """
         if isinstance(message, SystemMessage):
-            role = 'system'
+            role = "system"
         elif isinstance(message, HumanMessage):
-            role = 'user'
+            role = "user"
         elif isinstance(message, AIMessage):
-            role = 'assistant'
+            role = "assistant"
         elif isinstance(message, ToolMessage):
-            role = 'tool'
+            role = "tool"
         elif isinstance(message, ChatMessage):
             role = message.role
         else:
-            raise TypeError(f'Got unknown type {message}')
+            raise TypeError(f"Got unknown type {message}")
         return role
 
     def _messages_to_string(self, messages: List[BaseMessage], **kwargs: Any) -> str:
@@ -1590,53 +1659,58 @@ class ChatSambaStudio(BaseChatModel):
         """
         if self.process_prompt:
             messages_dict: Dict[str, Any] = {
-                'conversation_id': 'sambaverse-conversation-id',
-                'messages': [],
+                "conversation_id": "sambaverse-conversation-id",
+                "messages": [],
                 **kwargs,
             }
             for message in messages:
                 if isinstance(message, AIMessage):
                     message_dict = {
-                        'message_id': message.id,
-                        'role': self._get_role(message),
-                        'content': message.content,
+                        "message_id": message.id,
+                        "role": self._get_role(message),
+                        "content": message.content,
                     }
-                    if 'tool_calls' in message.additional_kwargs:
-                        message_dict['tool_calls'] = message.additional_kwargs['tool_calls']
-                        if message_dict['content'] == '':
-                            message_dict['content'] = None
+                    if "tool_calls" in message.additional_kwargs:
+                        message_dict["tool_calls"] = message.additional_kwargs[
+                            "tool_calls"
+                        ]
+                        if message_dict["content"] == "":
+                            message_dict["content"] = None
 
                 elif isinstance(message, ToolMessage):
                     message_dict = {
-                        'message_id': message.id,
-                        'role': self._get_role(message),
-                        'content': message.content,
-                        'tool_call_id': message.tool_call_id,
+                        "message_id": message.id,
+                        "role": self._get_role(message),
+                        "content": message.content,
+                        "tool_call_id": message.tool_call_id,
                     }
 
                 else:
                     message_dict = {
-                        'message_id': message.id,
-                        'role': self._get_role(message),
-                        'content': message.content,
+                        "message_id": message.id,
+                        "role": self._get_role(message),
+                        "content": message.content,
                     }
 
-                messages_dict['messages'].append(message_dict)
+                messages_dict["messages"].append(message_dict)
 
             messages_string = json.dumps(messages_dict)
 
         else:
-            if 'tools' in kwargs.keys():
+            if "tools" in kwargs.keys():
                 raise NotImplementedError(
-                    'tool calling not supported in API Generic V2 without process_prompt, '
-                    'switch to OpenAI compatible API or Generic V2 API with process_prompt=True'
+                    "tool calling not supported in API Generic V2 without"
+                    " process_prompt, switch to OpenAI compatible API"
+                    " or Generic V2 API with process_prompt=True"
                 )
-            messages_string = self.special_tokens['start']
+            messages_string = self.special_tokens["start"]
             for message in messages:
-                messages_string += self.special_tokens['start_role'].format(role=self._get_role(message))
-                messages_string += f' {message.content} '
-                messages_string += self.special_tokens['end_role']
-            messages_string += self.special_tokens['end']
+                messages_string += self.special_tokens["start_role"].format(
+                    role=self._get_role(message)
+                )
+                messages_string += f" {message.content} "
+                messages_string += self.special_tokens["end_role"]
+            messages_string += self.special_tokens["end"]
 
         return messages_string
 
@@ -1651,19 +1725,19 @@ class ChatSambaStudio(BaseChatModel):
             base_url: string with url to do non streaming calls
             streaming_url: string with url to do streaming calls
         """
-        if 'chat/completions' in url:
+        if "chat/completions" in url:
             base_url = url
             stream_url = url
         else:
-            if 'stream' in url:
-                base_url = url.replace('stream/', '')
+            if "stream" in url:
+                base_url = url.replace("stream/", "")
                 stream_url = url
             else:
                 base_url = url
-                if 'generic' in url:
-                    stream_url = 'generic/stream'.join(url.split('generic'))
+                if "generic" in url:
+                    stream_url = "generic/stream".join(url.split("generic"))
                 else:
-                    raise ValueError('Unsupported URL')
+                    raise ValueError("Unsupported URL")
         return base_url, stream_url
 
     def _handle_request(
@@ -1686,93 +1760,110 @@ class ChatSambaStudio(BaseChatModel):
         """
 
         # create request payload for openai compatible API
-        if 'chat/completions' in self.sambastudio_url:
+        if "chat/completions" in self.sambastudio_url:
             messages_dicts = _create_message_dicts(messages)
             data = {
-                'messages': messages_dicts,
-                'max_tokens': self.max_tokens,
-                'stop': stop,
-                'model': self.model,
-                'temperature': self.temperature,
-                'top_p': self.top_p,
-                'top_k': self.top_k,
-                'stream': streaming,
-                'stream_options': self.stream_options,
+                "messages": messages_dicts,
+                "max_tokens": self.max_tokens,
+                "stop": stop,
+                "model": self.model,
+                "temperature": self.temperature,
+                "top_p": self.top_p,
+                "top_k": self.top_k,
+                "stream": streaming,
+                "stream_options": self.stream_options,
                 **kwargs,
             }
             data = {key: value for key, value in data.items() if value is not None}
             headers = {
-                'Authorization': f'Bearer ' f'{self.sambastudio_api_key.get_secret_value()}',
-                'Content-Type': 'application/json',
+                "Authorization": f"Bearer "
+                f"{self.sambastudio_api_key.get_secret_value()}",
+                "Content-Type": "application/json",
                 **self.additional_headers,
             }
 
         # create request payload for generic v2 API
-        elif 'api/v2/predict/generic' in self.sambastudio_url:
-            items = [{'id': 'item0', 'value': self._messages_to_string(messages, **kwargs)}]
+        elif "api/v2/predict/generic" in self.sambastudio_url:
+            items = [
+                {"id": "item0", "value": self._messages_to_string(messages, **kwargs)}
+            ]
             params: Dict[str, Any] = {
-                'select_expert': self.model,
-                'process_prompt': self.process_prompt,
-                'max_tokens_to_generate': self.max_tokens,
-                'temperature': self.temperature,
-                'top_p': self.top_p,
-                'top_k': self.top_k,
-                'do_sample': self.do_sample,
+                "select_expert": self.model,
+                "process_prompt": self.process_prompt,
+                "max_tokens_to_generate": self.max_tokens,
+                "temperature": self.temperature,
+                "top_p": self.top_p,
+                "top_k": self.top_k,
+                "do_sample": self.do_sample,
             }
             if self.model_kwargs is not None:
                 params = {**params, **self.model_kwargs}
             params = {key: value for key, value in params.items() if value is not None}
-            data = {'items': items, 'params': params}
-            headers = {'key': self.sambastudio_api_key.get_secret_value(), **self.additional_headers}
+            data = {"items": items, "params": params}
+            headers = {
+                "key": self.sambastudio_api_key.get_secret_value(),
+                **self.additional_headers,
+            }
 
         # create request payload for generic v1 API
-        elif 'api/predict/generic' in self.sambastudio_url:
-            if 'tools' in kwargs.keys():
+        elif "api/predict/generic" in self.sambastudio_url:
+            if "tools" in kwargs.keys():
                 raise NotImplementedError(
-                    'tool calling not supported in API Generic V1, ' 'switch to OpenAI compatible API or Generic V2 API'
+                    "tool calling not supported in API Generic V1, "
+                    "switch to OpenAI compatible API or Generic V2 API"
                 )
             params = {
-                'select_expert': self.model,
-                'process_prompt': self.process_prompt,
-                'max_tokens_to_generate': self.max_tokens,
-                'temperature': self.temperature,
-                'top_p': self.top_p,
-                'top_k': self.top_k,
-                'do_sample': self.do_sample,
+                "select_expert": self.model,
+                "process_prompt": self.process_prompt,
+                "max_tokens_to_generate": self.max_tokens,
+                "temperature": self.temperature,
+                "top_p": self.top_p,
+                "top_k": self.top_k,
+                "do_sample": self.do_sample,
                 **kwargs,
             }
             if self.model_kwargs is not None:
                 params = {**params, **self.model_kwargs}
             params = {
-                key: {'type': type(value).__name__, 'value': str(value)}
+                key: {"type": type(value).__name__, "value": str(value)}
                 for key, value in params.items()
                 if value is not None
             }
             if streaming:
                 data = {
-                    'instance': self._messages_to_string(messages),
-                    'params': params,
+                    "instance": self._messages_to_string(messages),
+                    "params": params,
                 }
             else:
                 data = {
-                    'instances': [self._messages_to_string(messages)],
-                    'params': params,
+                    "instances": [self._messages_to_string(messages)],
+                    "params": params,
                 }
-            headers = {'key': self.sambastudio_api_key.get_secret_value(), **self.additional_headers}
+            headers = {
+                "key": self.sambastudio_api_key.get_secret_value(),
+                **self.additional_headers,
+            }
 
         else:
             raise ValueError(
-                f'Unsupported URL{self.sambastudio_url}' 'only openai, generic v1 and generic v2 APIs are supported'
+                f"Unsupported URL{self.sambastudio_url}"
+                "only openai, generic v1 and generic v2 APIs are supported"
             )
 
         http_session = requests.Session()
         if streaming:
-            response = http_session.post(self.streaming_url, headers=headers, json=data, stream=True)
+            response = http_session.post(
+                self.streaming_url, headers=headers, json=data, stream=True
+            )
         else:
-            response = http_session.post(self.base_url, headers=headers, json=data, stream=False)
+            response = http_session.post(
+                self.base_url, headers=headers, json=data, stream=False
+            )
         if response.status_code != 200:
             raise RuntimeError(
-                f'Sambanova /complete call failed with status code ' f'{response.status_code}.' f'{response.text}.'
+                f"Sambanova /complete call failed with status code "
+                f"{response.status_code}."
+                f"{response.text}."
             )
         return response
 
@@ -1792,7 +1883,8 @@ class ChatSambaStudio(BaseChatModel):
             response_dict = response.json()
         except Exception as e:
             raise RuntimeError(
-                f"Sambanova /complete call failed couldn't get JSON response {e}" f'response: {response.text}'
+                f"Sambanova /complete call failed couldn't get JSON response {e}"
+                f"response: {response.text}"
             )
 
         additional_kwargs: Dict[str, Any] = {}
@@ -1800,58 +1892,67 @@ class ChatSambaStudio(BaseChatModel):
         invalid_tool_calls = []
 
         # process response payload for openai compatible API
-        if 'chat/completions' in self.sambastudio_url:
-            content = response_dict['choices'][0]['message'].get('content', '')
+        if "chat/completions" in self.sambastudio_url:
+            content = response_dict["choices"][0]["message"].get("content", "")
             if content is None:
-                content = ''
-            id = response_dict['id']
+                content = ""
+            id = response_dict["id"]
             response_metadata = {
-                'finish_reason': response_dict['choices'][0]['finish_reason'],
-                'usage': response_dict.get('usage'),
-                'model_name': response_dict['model'],
-                'system_fingerprint': response_dict['system_fingerprint'],
-                'created': response_dict['created'],
+                "finish_reason": response_dict["choices"][0]["finish_reason"],
+                "usage": response_dict.get("usage"),
+                "model_name": response_dict["model"],
+                "system_fingerprint": response_dict["system_fingerprint"],
+                "created": response_dict["created"],
             }
-            raw_tool_calls = response_dict['choices'][0]['message'].get('tool_calls')
+            raw_tool_calls = response_dict["choices"][0]["message"].get("tool_calls")
             if raw_tool_calls:
-                additional_kwargs['tool_calls'] = raw_tool_calls
+                additional_kwargs["tool_calls"] = raw_tool_calls
                 for raw_tool_call in raw_tool_calls:
-                    if isinstance(raw_tool_call['function']['arguments'], dict):
-                        raw_tool_call['function']['arguments'] = json.dumps(
-                            raw_tool_call['function'].get('arguments', {})
+                    if isinstance(raw_tool_call["function"]["arguments"], dict):
+                        raw_tool_call["function"]["arguments"] = json.dumps(
+                            raw_tool_call["function"].get("arguments", {})
                         )
                     try:
-                        tool_calls.append(parse_tool_call(raw_tool_call, return_id=True))
+                        tool_calls.append(
+                            parse_tool_call(raw_tool_call, return_id=True)
+                        )
                     except Exception as e:
-                        invalid_tool_calls.append(make_invalid_tool_call(raw_tool_call, str(e)))
+                        invalid_tool_calls.append(
+                            make_invalid_tool_call(raw_tool_call, str(e))
+                        )
 
         # process response payload for generic v2 API
-        elif 'api/v2/predict/generic' in self.sambastudio_url:
-            content = response_dict['items'][0]['value']['completion']
-            id = response_dict['items'][0]['id']
-            response_metadata = response_dict['items'][0]
-            raw_tool_calls = response_dict['items'][0]['value'].get('tool_calls')
+        elif "api/v2/predict/generic" in self.sambastudio_url:
+            content = response_dict["items"][0]["value"]["completion"]
+            id = response_dict["items"][0]["id"]
+            response_metadata = response_dict["items"][0]
+            raw_tool_calls = response_dict["items"][0]["value"].get("tool_calls")
             if raw_tool_calls:
-                additional_kwargs['tool_calls'] = raw_tool_calls
+                additional_kwargs["tool_calls"] = raw_tool_calls
                 for raw_tool_call in raw_tool_calls:
-                    if isinstance(raw_tool_call['function']['arguments'], dict):
-                        raw_tool_call['function']['arguments'] = json.dumps(
-                            raw_tool_call['function'].get('arguments', {})
+                    if isinstance(raw_tool_call["function"]["arguments"], dict):
+                        raw_tool_call["function"]["arguments"] = json.dumps(
+                            raw_tool_call["function"].get("arguments", {})
                         )
                     try:
-                        tool_calls.append(parse_tool_call(raw_tool_call, return_id=True))
+                        tool_calls.append(
+                            parse_tool_call(raw_tool_call, return_id=True)
+                        )
                     except Exception as e:
-                        invalid_tool_calls.append(make_invalid_tool_call(raw_tool_call, str(e)))
+                        invalid_tool_calls.append(
+                            make_invalid_tool_call(raw_tool_call, str(e))
+                        )
 
         # process response payload for generic v1 API
-        elif 'api/predict/generic' in self.sambastudio_url:
-            content = response_dict['predictions'][0]['completion']
+        elif "api/predict/generic" in self.sambastudio_url:
+            content = response_dict["predictions"][0]["completion"]
             id = None
             response_metadata = response_dict
 
         else:
             raise ValueError(
-                f'Unsupported URL{self.sambastudio_url}' 'only openai, generic v1 and generic v2 APIs are supported'
+                f"Unsupported URL{self.sambastudio_url}"
+                "only openai, generic v1 and generic v2 APIs are supported"
             )
 
         return AIMessage(
@@ -1863,7 +1964,9 @@ class ChatSambaStudio(BaseChatModel):
             id=id,
         )
 
-    def _process_stream_response(self, response: Response) -> Iterator[BaseMessageChunk]:
+    def _process_stream_response(
+        self, response: Response
+    ) -> Iterator[BaseMessageChunk]:
         """
         Process a streaming response from the api
 
@@ -1877,66 +1980,91 @@ class ChatSambaStudio(BaseChatModel):
         try:
             import sseclient
         except ImportError:
-            raise ImportError('could not import sseclient library' 'Please install it with `pip install sseclient-py`.')
+            raise ImportError(
+                "could not import sseclient library"
+                "Please install it with `pip install sseclient-py`."
+            )
 
         # process response payload for openai compatible API
-        if 'chat/completions' in self.sambastudio_url:
+        if "chat/completions" in self.sambastudio_url:
             client = sseclient.SSEClient(response)
 
             for event in client.events():
-                if event.event == 'error_event':
+                if event.event == "error_event":
                     raise RuntimeError(
-                        f'Sambanova /complete call failed with status code ' f'{response.status_code}.' f'{event.data}.'
+                        f"Sambanova /complete call failed with status code "
+                        f"{response.status_code}."
+                        f"{event.data}."
                     )
                 try:
                     # check if the response is a final event
                     # in that case event data response is '[DONE]'
-                    if event.data != '[DONE]':
+                    if event.data != "[DONE]":
                         if isinstance(event.data, str):
                             data = json.loads(event.data)
                         else:
                             raise RuntimeError(
-                                f'Sambanova /complete call failed with status code '
-                                f'{response.status_code}.'
-                                f'{event.data}.'
+                                f"Sambanova /complete call failed with status code "
+                                f"{response.status_code}."
+                                f"{event.data}."
                             )
-                        if data.get('error'):
+                        if data.get("error"):
                             raise RuntimeError(
-                                f'Sambanova /complete call failed with status code '
-                                f'{response.status_code}.'
-                                f'{event.data}.'
+                                f"Sambanova /complete call failed with status code "
+                                f"{response.status_code}."
+                                f"{event.data}."
                             )
                         metadata = {}
                         tool_calls = []
                         invalid_tool_calls = []
                         additional_kwargs = {}
-                        if len(data['choices']) > 0 and data['choices'][0].get('delta', {}) != {}:
-                            finish_reason = data['choices'][0].get('finish_reason')
-                            content = data['choices'][0]['delta'].get('content', '')
+                        if (
+                            len(data["choices"]) > 0
+                            and data["choices"][0].get("delta", {}) != {}
+                        ):
+                            finish_reason = data["choices"][0].get("finish_reason")
+                            content = data["choices"][0]["delta"].get("content", "")
                             if content is None:
-                                content = ''
-                            id = data['id']
-                            raw_tool_calls = data['choices'][0]['delta'].get('tool_calls')
+                                content = ""
+                            id = data["id"]
+                            raw_tool_calls = data["choices"][0]["delta"].get(
+                                "tool_calls"
+                            )
                             if raw_tool_calls:
-                                additional_kwargs['tool_calls'] = raw_tool_calls
+                                additional_kwargs["tool_calls"] = raw_tool_calls
                                 for raw_tool_call in raw_tool_calls:
-                                    if isinstance(raw_tool_call['function']['arguments'], dict):
-                                        raw_tool_call['function']['arguments'] = json.dumps(
-                                            raw_tool_call['function'].get('arguments', {})
+                                    if isinstance(
+                                        raw_tool_call["function"]["arguments"], dict
+                                    ):
+                                        raw_tool_call["function"]["arguments"] = (
+                                            json.dumps(
+                                                raw_tool_call["function"].get(
+                                                    "arguments", {}
+                                                )
+                                            )
                                         )
                                     try:
-                                        tool_calls.append(parse_tool_call(raw_tool_call, return_id=True))
+                                        tool_calls.append(
+                                            parse_tool_call(
+                                                raw_tool_call, return_id=True
+                                            )
+                                        )
                                     except Exception as e:
-                                        invalid_tool_calls.append(make_invalid_tool_call(raw_tool_call, str(e)))
+                                        invalid_tool_calls.append(
+                                            make_invalid_tool_call(
+                                                raw_tool_call, str(e)
+                                            )
+                                        )
                         else:
-                            content = ''
-                            id = data['id']
+                            content = ""
+                            id = data["id"]
                             metadata = {
-                                'finish_reason': finish_reason or data['choices'][0].get('finish_reason'),
-                                'usage': data.get('usage'),
-                                'model_name': data.get('model'),
-                                'system_fingerprint': data.get('system_fingerprint'),
-                                'created': data.get('created'),
+                                "finish_reason": finish_reason
+                                or data["choices"][0].get("finish_reason"),
+                                "usage": data.get("usage"),
+                                "model_name": data.get("model"),
+                                "system_fingerprint": data.get("system_fingerprint"),
+                                "created": data.get("created"),
                             }
                         chunk = AIMessageChunk(
                             content=content,
@@ -1949,10 +2077,13 @@ class ChatSambaStudio(BaseChatModel):
                         yield chunk
 
                 except Exception as e:
-                    raise RuntimeError(f'Error getting content chunk raw streamed response: {e}' f'data: {event.data}')
+                    raise RuntimeError(
+                        f"Error getting content chunk raw streamed response: {e}"
+                        f"data: {event.data}"
+                    )
 
         # process response payload for generic v2 API
-        elif 'api/v2/predict/generic' in self.sambastudio_url:
+        elif "api/v2/predict/generic" in self.sambastudio_url:
             for line in response.iter_lines():
                 try:
                     metadata = {}
@@ -1960,38 +2091,58 @@ class ChatSambaStudio(BaseChatModel):
                     invalid_tool_calls = []
                     additional_kwargs = {}
                     data = json.loads(line)
-                    content = data['result']['items'][0]['value']['stream_token']
-                    id = data['result']['items'][0]['id']
-                    raw_tool_calls = data['items'][0]['value'].get('tool_calls')
+                    content = data["result"]["items"][0]["value"]["stream_token"]
+                    id = data["result"]["items"][0]["id"]
+                    raw_tool_calls = data["items"][0]["value"].get("tool_calls")
                     if raw_tool_calls:
-                        additional_kwargs['tool_calls'] = raw_tool_calls
+                        additional_kwargs["tool_calls"] = raw_tool_calls
                         for raw_tool_call in raw_tool_calls:
-                            if isinstance(raw_tool_call['function']['arguments'], dict):
-                                raw_tool_call['function']['arguments'] = json.dumps(
-                                    raw_tool_call['function'].get('arguments', {})
+                            if isinstance(raw_tool_call["function"]["arguments"], dict):
+                                raw_tool_call["function"]["arguments"] = json.dumps(
+                                    raw_tool_call["function"].get("arguments", {})
                                 )
                             try:
-                                tool_calls.append(parse_tool_call(raw_tool_call, return_id=True))
+                                tool_calls.append(
+                                    parse_tool_call(raw_tool_call, return_id=True)
+                                )
                             except Exception as e:
-                                invalid_tool_calls.append(make_invalid_tool_call(raw_tool_call, str(e)))
-                    if data['result']['items'][0]['value']['is_last_response']:
+                                invalid_tool_calls.append(
+                                    make_invalid_tool_call(raw_tool_call, str(e))
+                                )
+                    if data["result"]["items"][0]["value"]["is_last_response"]:
                         metadata = {
-                            'finish_reason': data['result']['items'][0]['value'].get('stop_reason'),
-                            'prompt': data['result']['items'][0]['value'].get('prompt'),
-                            'usage': {
-                                'prompt_tokens_count': data['result']['items'][0]['value'].get('prompt_tokens_count'),
-                                'completion_tokens_count': data['result']['items'][0]['value'].get(
-                                    'completion_tokens_count'
+                            "finish_reason": data["result"]["items"][0]["value"].get(
+                                "stop_reason"
+                            ),
+                            "prompt": data["result"]["items"][0]["value"].get("prompt"),
+                            "usage": {
+                                "prompt_tokens_count": data["result"]["items"][0][
+                                    "value"
+                                ].get("prompt_tokens_count"),
+                                "completion_tokens_count": data["result"]["items"][0][
+                                    "value"
+                                ].get("completion_tokens_count"),
+                                "total_tokens_count": data["result"]["items"][0][
+                                    "value"
+                                ].get("total_tokens_count"),
+                                "start_time": data["result"]["items"][0]["value"].get(
+                                    "start_time"
                                 ),
-                                'total_tokens_count': data['result']['items'][0]['value'].get('total_tokens_count'),
-                                'start_time': data['result']['items'][0]['value'].get('start_time'),
-                                'end_time': data['result']['items'][0]['value'].get('end_time'),
-                                'model_execution_time': data['result']['items'][0]['value'].get('model_execution_time'),
-                                'time_to_first_token': data['result']['items'][0]['value'].get('time_to_first_token'),
-                                'throughput_after_first_token': data['result']['items'][0]['value'].get(
-                                    'throughput_after_first_token'
+                                "end_time": data["result"]["items"][0]["value"].get(
+                                    "end_time"
                                 ),
-                                'batch_size_used': data['result']['items'][0]['value'].get('batch_size_used'),
+                                "model_execution_time": data["result"]["items"][0][
+                                    "value"
+                                ].get("model_execution_time"),
+                                "time_to_first_token": data["result"]["items"][0][
+                                    "value"
+                                ].get("time_to_first_token"),
+                                "throughput_after_first_token": data["result"]["items"][
+                                    0
+                                ]["value"].get("throughput_after_first_token"),
+                                "batch_size_used": data["result"]["items"][0][
+                                    "value"
+                                ].get("batch_size_used"),
                             },
                         }
                     yield AIMessageChunk(
@@ -2004,33 +2155,52 @@ class ChatSambaStudio(BaseChatModel):
                     )
 
                 except Exception as e:
-                    raise RuntimeError(f'Error getting content chunk raw streamed response: {e}' f'line: {line}')
+                    raise RuntimeError(
+                        f"Error getting content chunk raw streamed response: {e}"
+                        f"line: {line}"
+                    )
 
         # process response payload for generic v1 API
-        elif 'api/predict/generic' in self.sambastudio_url:
+        elif "api/predict/generic" in self.sambastudio_url:
             for line in response.iter_lines():
                 try:
                     data = json.loads(line)
-                    content = data['result']['responses'][0]['stream_token']
+                    content = data["result"]["responses"][0]["stream_token"]
                     id = None
-                    if data['result']['responses'][0]['is_last_response']:
+                    if data["result"]["responses"][0]["is_last_response"]:
                         metadata = {
-                            'finish_reason': data['result']['responses'][0].get('stop_reason'),
-                            'prompt': data['result']['responses'][0].get('prompt'),
-                            'usage': {
-                                'prompt_tokens_count': data['result']['responses'][0].get('prompt_tokens_count'),
-                                'completion_tokens_count': data['result']['responses'][0].get(
-                                    'completion_tokens_count'
+                            "finish_reason": data["result"]["responses"][0].get(
+                                "stop_reason"
+                            ),
+                            "prompt": data["result"]["responses"][0].get("prompt"),
+                            "usage": {
+                                "prompt_tokens_count": data["result"]["responses"][
+                                    0
+                                ].get("prompt_tokens_count"),
+                                "completion_tokens_count": data["result"]["responses"][
+                                    0
+                                ].get("completion_tokens_count"),
+                                "total_tokens_count": data["result"]["responses"][
+                                    0
+                                ].get("total_tokens_count"),
+                                "start_time": data["result"]["responses"][0].get(
+                                    "start_time"
                                 ),
-                                'total_tokens_count': data['result']['responses'][0].get('total_tokens_count'),
-                                'start_time': data['result']['responses'][0].get('start_time'),
-                                'end_time': data['result']['responses'][0].get('end_time'),
-                                'model_execution_time': data['result']['responses'][0].get('model_execution_time'),
-                                'time_to_first_token': data['result']['responses'][0].get('time_to_first_token'),
-                                'throughput_after_first_token': data['result']['responses'][0].get(
-                                    'throughput_after_first_token'
+                                "end_time": data["result"]["responses"][0].get(
+                                    "end_time"
                                 ),
-                                'batch_size_used': data['result']['responses'][0].get('batch_size_used'),
+                                "model_execution_time": data["result"]["responses"][
+                                    0
+                                ].get("model_execution_time"),
+                                "time_to_first_token": data["result"]["responses"][
+                                    0
+                                ].get("time_to_first_token"),
+                                "throughput_after_first_token": data["result"][
+                                    "responses"
+                                ][0].get("throughput_after_first_token"),
+                                "batch_size_used": data["result"]["responses"][0].get(
+                                    "batch_size_used"
+                                ),
                             },
                         }
                     else:
@@ -2043,11 +2213,15 @@ class ChatSambaStudio(BaseChatModel):
                     )
 
                 except Exception as e:
-                    raise RuntimeError(f'Error getting content chunk raw streamed response: {e}' f'line: {line}')
+                    raise RuntimeError(
+                        f"Error getting content chunk raw streamed response: {e}"
+                        f"line: {line}"
+                    )
 
         else:
             raise ValueError(
-                f'Unsupported URL{self.sambastudio_url}' 'only openai, generic v1 and generic v2 APIs are supported'
+                f"Unsupported URL{self.sambastudio_url}"
+                "only openai, generic v1 and generic v2 APIs are supported"
             )
 
     def _generate(
@@ -2074,7 +2248,9 @@ class ChatSambaStudio(BaseChatModel):
             result: ChatResult with model generation
         """
         if self.streaming:
-            stream_iter = self._stream(messages, stop=stop, run_manager=run_manager, **kwargs)
+            stream_iter = self._stream(
+                messages, stop=stop, run_manager=run_manager, **kwargs
+            )
             if stream_iter:
                 return generate_from_stream(stream_iter)
         response = self._handle_request(messages, stop, streaming=False, **kwargs)

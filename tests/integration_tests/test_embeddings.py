@@ -2,8 +2,9 @@
 
 from typing import Type
 
-from langchain_sambanova.embeddings import SambaNovaEmbeddings
 from langchain_tests.integration_tests import EmbeddingsIntegrationTests
+
+from langchain_sambanova.embeddings import SambaNovaEmbeddings
 
 
 class TestParrotLinkEmbeddingsIntegration(EmbeddingsIntegrationTests):
