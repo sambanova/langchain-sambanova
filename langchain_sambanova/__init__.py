@@ -1,7 +1,7 @@
 from importlib import metadata
 
 from langchain_sambanova.chat_models import ChatSambaNovaCloud, ChatSambaStudio
-from langchain_sambanova.embeddings import SambaNovaEmbeddings
+from langchain_sambanova.embeddings import SambaStudioEmbeddings
 
 try:
     __version__ = metadata.version(__package__)
@@ -13,6 +13,6 @@ del metadata  # optional, avoids polluting the results of dir(__package__)
 __all__ = [
     "ChatSambaNovaCloud",
     "ChatSambaStudio",
-    "SambaNovaEmbeddings",
+    "SambaStudioEmbeddings",
     "__version__",
 ]
