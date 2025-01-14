@@ -1,3 +1,10 @@
+<a href="https://sambanova.ai/">
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="img/SambaNova-light-logo-1.png" height="60">
+  <img alt="Text changing depending on mode. Light: 'So light!' Dark: 'So dark!'" src="img/SambaNova-dark-logo-1.png" height="60">
+</picture>
+</a>
+
 # langchain-sambanova
 
 This package contains the LangChain integration with SambaNova
