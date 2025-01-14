@@ -4,13 +4,13 @@ from typing import Type
 
 from langchain_tests.integration_tests import ChatModelIntegrationTests
 
-from langchain_sambanova.chat_models import ChatSambaNova
+from langchain_sambanova.chat_models import ChatSambaNovaCloud
 
 
-class TestChatParrotLinkIntegration(ChatModelIntegrationTests):
+class TestSambaNovaCloudBase(ChatModelIntegrationTests):
     @property
-    def chat_model_class(self) -> Type[ChatSambaNova]:
-        return ChatSambaNova
+    def chat_model_class(self) -> Type[ChatSambaNovaCloud]:
+        return ChatSambaNovaCloud
 
     @property
     def chat_model_params(self) -> dict:
