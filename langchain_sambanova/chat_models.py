@@ -127,7 +127,6 @@ class ChatSambaNovaCloud(BaseChatModel):
                 max_tokens = max number of tokens to generate,
                 temperature = model temperature,
                 top_p = model top p,
-                top_k = model top k,
                 stream_options = include usage to get generation metrics
             )
 
@@ -142,8 +141,6 @@ class ChatSambaNovaCloud(BaseChatModel):
             model temperature
         top_p: float
             model top p
-        top_k: int
-            model top k
         stream_options: dict
             stream options, include usage to get generation metrics
 
@@ -165,7 +162,6 @@ class ChatSambaNovaCloud(BaseChatModel):
                 max_tokens = max number of tokens to generate,
                 temperature = model temperature,
                 top_p = model top p,
-                top_k = model top k,
                 stream_options = include usage to get generation metrics
             )
 
@@ -276,9 +272,6 @@ class ChatSambaNovaCloud(BaseChatModel):
     top_p: Optional[float] = Field(default=None)
     """model top p"""
 
-    top_k: Optional[int] = Field(default=None)
-    """model top k"""
-
     stream_options: Dict[str, Any] = Field(default={"include_usage": True})
     """stream options, include usage to get generation metrics"""
 
@@ -310,7 +303,6 @@ class ChatSambaNovaCloud(BaseChatModel):
             "max_tokens": self.max_tokens,
             "temperature": self.temperature,
             "top_p": self.top_p,
-            "top_k": self.top_k,
             "stream_options": self.stream_options,
         }
 
@@ -710,7 +702,6 @@ class ChatSambaNovaCloud(BaseChatModel):
                 "model": self.model,
                 "temperature": self.temperature,
                 "top_p": self.top_p,
-                "top_k": self.top_k,
                 "stream": True,
                 "stream_options": self.stream_options,
                 **kwargs,
@@ -723,7 +714,6 @@ class ChatSambaNovaCloud(BaseChatModel):
                 "model": self.model,
                 "temperature": self.temperature,
                 "top_p": self.top_p,
-                "top_k": self.top_k,
                 **kwargs,
             }
         http_session = requests.Session()
@@ -1002,7 +992,6 @@ class ChatSambaStudio(BaseChatModel):
                 max_tokens = max number of tokens to generate,
                 temperature = model temperature,
                 top_p = model top p,
-                top_k = model top k,
                 do_sample = wether to do sample
                 process_prompt = wether to process prompt
                     (set for Bundle generic v1 and v2 endpoints)
@@ -1025,8 +1014,6 @@ class ChatSambaStudio(BaseChatModel):
             model temperature
         top_p: float
             model top p
-        top_k: int
-            model top k
         do_sample: bool
             wether to do sample
         process_prompt:
@@ -1058,7 +1045,6 @@ class ChatSambaStudio(BaseChatModel):
                 max_tokens = max number of tokens to generate,
                 temperature = model temperature,
                 top_p = model top p,
-                top_k = model top k,
                 do_sample = wether to do sample
                 process_prompt = wether to process prompt
                     (set for Bundle generic v1 and v2 endpoints)
@@ -1181,9 +1167,6 @@ class ChatSambaStudio(BaseChatModel):
     top_p: Optional[float] = Field(default=None)
     """model top p"""
 
-    top_k: Optional[int] = Field(default=None)
-    """model top k"""
-
     do_sample: Optional[bool] = Field(default=None)
     """whether to do sampling"""
 
@@ -1240,7 +1223,6 @@ class ChatSambaStudio(BaseChatModel):
             "max_tokens": self.max_tokens,
             "temperature": self.temperature,
             "top_p": self.top_p,
-            "top_k": self.top_k,
             "do_sample": self.do_sample,
             "process_prompt": self.process_prompt,
             "stream_options": self.stream_options,
@@ -1769,7 +1751,6 @@ class ChatSambaStudio(BaseChatModel):
                 "model": self.model,
                 "temperature": self.temperature,
                 "top_p": self.top_p,
-                "top_k": self.top_k,
                 "stream": streaming,
                 "stream_options": self.stream_options,
                 **kwargs,
@@ -1793,7 +1774,6 @@ class ChatSambaStudio(BaseChatModel):
                 "max_tokens_to_generate": self.max_tokens,
                 "temperature": self.temperature,
                 "top_p": self.top_p,
-                "top_k": self.top_k,
                 "do_sample": self.do_sample,
             }
             if self.model_kwargs is not None:
@@ -1818,7 +1798,6 @@ class ChatSambaStudio(BaseChatModel):
                 "max_tokens_to_generate": self.max_tokens,
                 "temperature": self.temperature,
                 "top_p": self.top_p,
-                "top_k": self.top_k,
                 "do_sample": self.do_sample,
                 **kwargs,
             }
