@@ -4,7 +4,7 @@ from typing import Type
 
 from langchain_tests.unit_tests import ChatModelUnitTests
 
-from langchain_sambanova.chat_models import ChatSambaNovaCloud
+from langchain_sambanova.chat_models import ChatSambaNovaCloud, ChatSambaStudio
 
 
 class TestSambaNovaCloudBase(ChatModelUnitTests):
@@ -14,9 +14,14 @@ class TestSambaNovaCloudBase(ChatModelUnitTests):
 
     @property
     def chat_model_params(self) -> dict:
-        # These should be parameters used to initialize your integration for testing
-        return {
-            "model": "bird-brain-001",
-            "temperature": 0,
-            "parrot_buffer_length": 50,
-        }
+        return {"model": "Meta-Llama-3.3-70B-Instruct", "temperature": 0}
+
+
+class TestSambaStudioBase(ChatModelUnitTests):
+    @property
+    def chat_model_class(self) -> Type[ChatSambaStudio]:
+        return ChatSambaStudio
+
+    @property
+    def chat_model_params(self) -> dict:
+        return {"model": "Meta-Llama-3-70B-Instruct-4096", "temperature": 0}
