@@ -4,13 +4,13 @@ from typing import Type
 
 from langchain_tests.integration_tests import EmbeddingsIntegrationTests
 
-from langchain_sambanova.embeddings import SambaNovaEmbeddings
+from langchain_sambanova.embeddings import SambaStudioEmbeddings
 
 
-class TestParrotLinkEmbeddingsIntegration(EmbeddingsIntegrationTests):
+class TestSambaStudioEmbeddingsBase(EmbeddingsIntegrationTests):
     @property
-    def embeddings_class(self) -> Type[SambaNovaEmbeddings]:
-        return SambaNovaEmbeddings
+    def embeddings_class(self) -> Type[SambaStudioEmbeddings]:
+        return SambaStudioEmbeddings
 
     @property
     def embedding_model_params(self) -> dict:
