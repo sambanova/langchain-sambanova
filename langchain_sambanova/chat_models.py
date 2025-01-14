@@ -258,7 +258,7 @@ class ChatSambaNovaCloud(BaseChatModel):
     sambanova_url: str = Field(default="")
     """SambaNova Cloud Url"""
 
-    sambanova_api_key: SecretStr = Field(default="")
+    sambanova_api_key: SecretStr = Field(default=SecretStr(""))
     """SambaNova Cloud api key"""
 
     model: str = Field(default="Meta-Llama-3.1-8B-Instruct")
@@ -824,7 +824,7 @@ class ChatSambaNovaCloud(BaseChatModel):
                 "Please install it with `pip install sseclient-py`."
             )
 
-        client = sseclient.SSEClient(response)
+        client = sseclient.SSEClient(response)  # type: ignore
 
         for event in client.events():
             if event.event == "error_event":
@@ -1157,7 +1157,7 @@ class ChatSambaStudio(BaseChatModel):
     sambastudio_url: str = Field(default="")
     """SambaStudio Url"""
 
-    sambastudio_api_key: SecretStr = Field(default="")
+    sambastudio_api_key: SecretStr = Field(default=SecretStr(""))
     """SambaStudio api key"""
 
     base_url: str = Field(default="", exclude=True)
@@ -1987,7 +1987,7 @@ class ChatSambaStudio(BaseChatModel):
 
         # process response payload for openai compatible API
         if "chat/completions" in self.sambastudio_url:
-            client = sseclient.SSEClient(response)
+            client = sseclient.SSEClient(response)  # type: ignore
 
             for event in client.events():
                 if event.event == "error_event":
