@@ -632,7 +632,7 @@ class ChatSambaNovaCloud(BaseChatModel):
             llm = self.bind_tools([schema], tool_choice=tool_name)
             if is_pydantic_schema:
                 output_parser: OutputParserLike[Any] = PydanticToolsParser(
-                    tools=[schema],
+                    tools=[schema],  # type: ignore
                     first_tool_only=True,
                 )
             else:
@@ -897,7 +897,7 @@ class ChatSambaNovaCloud(BaseChatModel):
                     chunk = AIMessageChunk(
                         content=content,
                         id=id,
-                        tool_calls=tool_calls,
+                        tool_calls=tool_calls,  # type: ignore
                         invalid_tool_calls=invalid_tool_calls,
                         additional_kwargs=additional_kwargs,
                         response_metadata=metadata,
@@ -2069,7 +2069,7 @@ class ChatSambaStudio(BaseChatModel):
                         chunk = AIMessageChunk(
                             content=content,
                             id=id,
-                            tool_calls=tool_calls,
+                            tool_calls=tool_calls,  # type: ignore
                             invalid_tool_calls=invalid_tool_calls,
                             additional_kwargs=additional_kwargs,
                             response_metadata=metadata,
@@ -2148,7 +2148,7 @@ class ChatSambaStudio(BaseChatModel):
                     yield AIMessageChunk(
                         content=content,
                         id=id,
-                        tool_calls=tool_calls,
+                        tool_calls=tool_calls,  # type: ignore
                         invalid_tool_calls=invalid_tool_calls,
                         response_metadata=metadata,
                         additional_kwargs=additional_kwargs,
