@@ -14,4 +14,4 @@ class TestSambaStudioEmbeddingsBase(EmbeddingsIntegrationTests):
 
     @property
     def embedding_model_params(self) -> dict:
-        return {"model": "nest-embed-001"}
+        return {"model_kwargs": {"select_expert": "e5-mistral-7b-instruct-32768"}}
