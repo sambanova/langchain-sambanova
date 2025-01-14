@@ -240,8 +240,8 @@ class ChatSambaNovaCloud(BaseChatModel):
         .. code-block:: python
 
             response = chat.invoke(messages)
-            print(response.response_metadata["usage"]["prompt_tokens"]
-            print(response.response_metadata["usage"]["total_tokens"]
+            print(response.usage_metadata["prompt_tokens"]
+            print(response.usage_metadata["total_tokens"] #TODO: use USAGE_METADATA typedDict Object
 
     Response metadata
         .. code-block:: python
@@ -790,6 +790,7 @@ class ChatSambaNovaCloud(BaseChatModel):
                 "system_fingerprint": response_dict["system_fingerprint"],
                 "created": response_dict["created"],
             },
+            usage_metadata=response_dict.get("usage", {}),
             id=response_dict["id"],
         )
         return message
@@ -843,6 +844,7 @@ class ChatSambaNovaCloud(BaseChatModel):
                             f"{event.data}."
                         )
                     metadata = {}
+                    usage_metadata = {}
                     tool_calls = []
                     invalid_tool_calls = []
                     additional_kwargs = {}
@@ -884,6 +886,8 @@ class ChatSambaNovaCloud(BaseChatModel):
                             "system_fingerprint": data.get("system_fingerprint"),
                             "created": data.get("created"),
                         }
+                        usage_metadata = data.get("usage", {})
+
                     chunk = AIMessageChunk(
                         content=content,
                         id=id,
@@ -891,6 +895,7 @@ class ChatSambaNovaCloud(BaseChatModel):
                         invalid_tool_calls=invalid_tool_calls,
                         additional_kwargs=additional_kwargs,
                         response_metadata=metadata,
+                        usage_metadata=usage_metadata,
                     )
                     yield chunk
 
@@ -1130,8 +1135,8 @@ class ChatSambaStudio(BaseChatModel):
         .. code-block:: python
 
             response = chat.invoke(messages)
-            print(response.response_metadata["usage"]["prompt_tokens"]
-            print(response.response_metadata["usage"]["total_tokens"]
+            print(response.usage_metadata["prompt_tokens"]
+            print(response.usage_metadata["total_tokens"]
 
     Response metadata
         .. code-block:: python
@@ -1883,6 +1888,7 @@ class ChatSambaStudio(BaseChatModel):
                 "system_fingerprint": response_dict["system_fingerprint"],
                 "created": response_dict["created"],
             }
+            usage_metadata = response_dict.get("usage", {})
             raw_tool_calls = response_dict["choices"][0]["message"].get("tool_calls")
             if raw_tool_calls:
                 additional_kwargs["tool_calls"] = raw_tool_calls
@@ -1905,6 +1911,7 @@ class ChatSambaStudio(BaseChatModel):
             content = response_dict["items"][0]["value"]["completion"]
             id = response_dict["items"][0]["id"]
             response_metadata = response_dict["items"][0]
+            usage_metadata = {}
             raw_tool_calls = response_dict["items"][0]["value"].get("tool_calls")
             if raw_tool_calls:
                 additional_kwargs["tool_calls"] = raw_tool_calls
@@ -1927,6 +1934,7 @@ class ChatSambaStudio(BaseChatModel):
             content = response_dict["predictions"][0]["completion"]
             id = None
             response_metadata = response_dict
+            usage_metadata = {}
 
         else:
             raise ValueError(
@@ -1940,6 +1948,7 @@ class ChatSambaStudio(BaseChatModel):
             tool_calls=tool_calls,
             invalid_tool_calls=invalid_tool_calls,
             response_metadata=response_metadata,
+            usage_metadata=usage_metadata,
             id=id,
         )
 
@@ -1994,6 +2003,7 @@ class ChatSambaStudio(BaseChatModel):
                                 f"{event.data}."
                             )
                         metadata = {}
+                        usage_metadata = {}
                         tool_calls = []
                         invalid_tool_calls = []
                         additional_kwargs = {}
@@ -2045,6 +2055,7 @@ class ChatSambaStudio(BaseChatModel):
                                 "system_fingerprint": data.get("system_fingerprint"),
                                 "created": data.get("created"),
                             }
+                            usage_metadata = data.get("usage", {})
                         chunk = AIMessageChunk(
                             content=content,
                             id=id,
@@ -2052,6 +2063,7 @@ class ChatSambaStudio(BaseChatModel):
                             invalid_tool_calls=invalid_tool_calls,
                             additional_kwargs=additional_kwargs,
                             response_metadata=metadata,
+                            usage_metadata=usage_metadata,
                         )
                         yield chunk
 
@@ -2066,6 +2078,7 @@ class ChatSambaStudio(BaseChatModel):
             for line in response.iter_lines():
                 try:
                     metadata = {}
+                    usage_metadata = {}
                     tool_calls = []
                     invalid_tool_calls = []
                     additional_kwargs = {}
@@ -2124,6 +2137,7 @@ class ChatSambaStudio(BaseChatModel):
                                 ].get("batch_size_used"),
                             },
                         }
+                        usage_metadata = metadata.get("usage", {})
                     yield AIMessageChunk(
                         content=content,
                         id=id,
@@ -2131,6 +2145,7 @@ class ChatSambaStudio(BaseChatModel):
                         invalid_tool_calls=invalid_tool_calls,
                         response_metadata=metadata,
                         additional_kwargs=additional_kwargs,
+                        usage_metadata=usage_metadata,
                     )
 
                 except Exception as e:
@@ -2184,10 +2199,12 @@ class ChatSambaStudio(BaseChatModel):
                         }
                     else:
                         metadata = {}
+                    usage_metadata = metadata.get("usage", {})
                     yield AIMessageChunk(
                         content=content,
                         id=id,
                         response_metadata=metadata,
+                        usage_metadata=usage_metadata,
                         additional_kwargs={},
                     )
 
