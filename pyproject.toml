@@ -24,6 +24,7 @@ langchain-core = "^0.3.15"
 
 [tool.ruff.lint]
 select = ["E", "F", "I", "T201"]
+per-file-ignores = { "docs/*.ipynb" = ["T201"] }
 
 [tool.coverage.run]
 omit = ["tests/*"]
