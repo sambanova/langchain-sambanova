@@ -153,7 +153,7 @@ class ChatSambaNovaCloud(BaseChatModel):
     Instantiate:
         .. code-block:: python
 
-            from langchain_community.chat_models import ChatSambaNovaCloud
+            from langchain_sambanova import ChatSambaNovaCloud
 
             chat = ChatSambaNovaCloud(
                 sambanova_url = SambaNova cloud endpoint URL,
@@ -425,7 +425,7 @@ class ChatSambaNovaCloud(BaseChatModel):
 
                 from typing import Optional
 
-                from langchain_community.chat_models import ChatSambaNovaCloud
+                from langchain_sambanova import ChatSambaNovaCloud
                 from pydantic import BaseModel, Field
 
 
@@ -453,7 +453,7 @@ class ChatSambaNovaCloud(BaseChatModel):
         Example: schema=Pydantic class, method="function_calling", include_raw=True:
             .. code-block:: python
 
-                from langchain_community.chat_models import ChatSambaNovaCloud
+                from langchain_sambanova import ChatSambaNovaCloud
                 from pydantic import BaseModel
 
 
@@ -485,7 +485,7 @@ class ChatSambaNovaCloud(BaseChatModel):
                 # from typing_extensions, not from typing.
                 from typing_extensions import Annotated, TypedDict
 
-                from langchain_community.chat_models import ChatSambaNovaCloud
+                from langchain_sambanova import ChatSambaNovaCloud
 
 
                 class AnswerWithJustification(TypedDict):
@@ -511,7 +511,7 @@ class ChatSambaNovaCloud(BaseChatModel):
         Example: schema=OpenAI function schema, method="function_calling", include_raw=False:
             .. code-block:: python
 
-                from langchain_community.chat_models import ChatSambaNovaCloud
+                from langchain_sambanova import ChatSambaNovaCloud
 
                 oai_schema = {
                     'name': 'AnswerWithJustification',
@@ -540,7 +540,7 @@ class ChatSambaNovaCloud(BaseChatModel):
         Example: schema=Pydantic class, method="json_mode", include_raw=True:
             .. code-block::
 
-                from langchain_community.chat_models import ChatSambaNovaCloud
+                from langchain_sambanova import ChatSambaNovaCloud
                 from pydantic import BaseModel
 
                 class AnswerWithJustification(BaseModel):
@@ -568,7 +568,7 @@ class ChatSambaNovaCloud(BaseChatModel):
         Example: schema=None, method="json_mode", include_raw=True:
             .. code-block::
 
-                from langchain_community.chat_models import ChatSambaNovaCloud
+                from langchain_sambanova import ChatSambaNovaCloud
 
                 llm = ChatSambaNovaCloud(model="Meta-Llama-3.1-70B-Instruct", temperature=0)
                 structured_llm = llm.with_structured_output(method="json_mode", include_raw=True)
@@ -590,7 +590,7 @@ class ChatSambaNovaCloud(BaseChatModel):
         Example: schema=None, method="json_schema", include_raw=True:
             .. code-block::
 
-                from langchain_community.chat_models import ChatSambaNovaCloud
+                from langchain_sambanova import ChatSambaNovaCloud
 
                 class AnswerWithJustification(BaseModel):
                     answer: str
@@ -1036,7 +1036,7 @@ class ChatSambaStudio(BaseChatModel):
     Instantiate:
         .. code-block:: python
 
-            from langchain_community.chat_models import ChatSambaStudio
+            from langchain_sambanova import ChatSambaStudio
 
             chat = ChatSambaStudio=(
                 sambastudio_url = set with your SambaStudio deployed endpoint URL,
@@ -1350,7 +1350,7 @@ class ChatSambaStudio(BaseChatModel):
 
                 from typing import Optional
 
-                from langchain_community.chat_models import ChatSambaStudio
+                from langchain_sambanova import ChatSambaStudio
                 from pydantic import BaseModel, Field
 
 
@@ -1378,7 +1378,7 @@ class ChatSambaStudio(BaseChatModel):
         Example: schema=Pydantic class, method="function_calling", include_raw=True:
             .. code-block:: python
 
-                from langchain_community.chat_models import ChatSambaStudio
+                from langchain_sambanova import ChatSambaStudio
                 from pydantic import BaseModel
 
 
@@ -1410,7 +1410,7 @@ class ChatSambaStudio(BaseChatModel):
                 # from typing_extensions, not from typing.
                 from typing_extensions import Annotated, TypedDict
 
-                from langchain_community.chat_models import ChatSambaStudio
+                from langchain_sambanova import ChatSambaStudio
 
 
                 class AnswerWithJustification(TypedDict):
@@ -1436,7 +1436,7 @@ class ChatSambaStudio(BaseChatModel):
         Example: schema=OpenAI function schema, method="function_calling", include_raw=False:
             .. code-block:: python
 
-                from langchain_community.chat_models import ChatSambaStudio
+                from langchain_sambanova import ChatSambaStudio
 
                 oai_schema = {
                     'name': 'AnswerWithJustification',
@@ -1465,7 +1465,7 @@ class ChatSambaStudio(BaseChatModel):
         Example: schema=Pydantic class, method="json_mode", include_raw=True:
             .. code-block::
 
-                from langchain_community.chat_models import ChatSambaStudio
+                from langchain_sambanova import ChatSambaStudio
                 from pydantic import BaseModel
 
                 class AnswerWithJustification(BaseModel):
@@ -1493,7 +1493,7 @@ class ChatSambaStudio(BaseChatModel):
         Example: schema=None, method="json_mode", include_raw=True:
             .. code-block::
 
-                from langchain_community.chat_models import ChatSambaStudio
+                from langchain_sambanova import ChatSambaStudio
 
                 llm = ChatSambaStudio(model="Meta-Llama-3.1-70B-Instruct", temperature=0)
                 structured_llm = llm.with_structured_output(method="json_mode", include_raw=True)
@@ -1515,7 +1515,7 @@ class ChatSambaStudio(BaseChatModel):
         Example: schema=None, method="json_schema", include_raw=True:
             .. code-block::
 
-                from langchain_community.chat_models import ChatSambaStudio
+                from langchain_sambanova import ChatSambaStudio
 
                 class AnswerWithJustification(BaseModel):
                     answer: str
