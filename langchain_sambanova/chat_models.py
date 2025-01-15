@@ -2072,7 +2072,7 @@ class ChatSambaStudio(BaseChatModel):
                     data = json.loads(line)
                     content = data["result"]["items"][0]["value"]["stream_token"]
                     id = data["result"]["items"][0]["id"]
-                    raw_tool_calls = data["items"][0]["value"].get("tool_calls")
+                    raw_tool_calls = data["result"]["items"][0]["value"].get("tool_calls")
                     if raw_tool_calls:
                         additional_kwargs["tool_calls"] = raw_tool_calls
                         for raw_tool_call in raw_tool_calls:
