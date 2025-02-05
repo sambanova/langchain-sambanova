@@ -6,9 +6,9 @@ build-backend = "poetry.core.masonry.api"
 name = "langchain-sambanova"
 version = "0.1.0"
 description = "An integration package connecting SambaNova and LangChain"
-authors = []
+authors = ["SambaNova Systems"]
 readme = "README.md"
-repository = "https://github.com/langchain-ai/langchain"
+repository = "https://github.com/sambanova/langchain-sambanova"
 license = "MIT"
 
 [tool.mypy]

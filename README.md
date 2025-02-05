@@ -1,3 +1,10 @@
+<a href="https://sambanova.ai/">
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="img/SambaNova-light-logo-1.png" height="60">
+  <img alt="SambaNova logo changing depending on mode. Light: 'So light!' Dark: 'So dark!'" src="img/SambaNova-dark-logo-1.png" height="60">
+</picture>
+</a>
+
 # langchain-sambanova
 
 This package contains the LangChain integration with SambaNova
@@ -33,7 +40,7 @@ export SAMBASTUDIO_API_KEY="your-sambastudio-api-key-here"
 from langchain_sambanova import ChatSambaNovaCloud
 
 llm = ChatSambaNovaCloud(
-    model = "Meta-Llama-3.3-70B-Instruct"
+    model = "Meta-Llama-3.3-70B-Instruct",
     temperature = 0.7
 )
 llm.invoke("Tell me a joke about artificial intelligence.")
@@ -47,7 +54,7 @@ llm.invoke("Tell me a joke about artificial intelligence.")
 from langchain_sambanova import ChatSambaStudio
 
 llm = ChatSambaStudio(
-    model = "Meta-Llama-3.3-70B-Instruct"
+    model = "Meta-Llama-3.3-70B-Instruct",
     temperature = 0.7
 )
 llm.invoke("Tell me a joke about artificial intelligence.")
