@@ -634,9 +634,7 @@ class ChatSambaNovaCloud(BaseChatModel):
                     key_name=tool_name, first_tool_only=True
                 )
         elif method == "json_mode":
-            llm = self
-            # TODO bind response format when json mode available by API
-            # llm = self.bind(response_format={"type": "json_object"})
+            llm = self.bind(response_format={"type": "json_object"})
             if is_pydantic_schema:
                 schema = cast(Type[BaseModel], schema)
                 output_parser = PydanticOutputParser(pydantic_object=schema)
@@ -1587,9 +1585,7 @@ class ChatSambaStudio(BaseChatModel):
                     key_name=tool_name, first_tool_only=True
                 )
         elif method == "json_mode":
-            llm = self
-            # TODO bind response format when json mode available by API
-            # llm = self.bind(response_format={"type": "json_object"})
+            llm = self.bind(response_format={"type": "json_object"})
             if is_pydantic_schema:
                 schema = cast(Type[BaseModel], schema)
                 output_parser = PydanticOutputParser(pydantic_object=schema)
