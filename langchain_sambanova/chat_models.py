@@ -36,6 +36,7 @@ from langchain_core.messages import (
     SystemMessage,
     ToolMessage,
 )
+from langchain_core.messages.ai import UsageMetadata
 from langchain_core.output_parsers import (
     JsonOutputParser,
     PydanticOutputParser,
@@ -240,8 +241,9 @@ class ChatSambaNovaCloud(BaseChatModel):
         .. code-block:: python
 
             response = chat.invoke(messages)
-            print(response.response_metadata["usage"]["prompt_tokens"]
-            print(response.response_metadata["usage"]["total_tokens"]
+            print(response.usage_metadata["input_tokens"])
+            print(response.usage_metadata["completion_tokens"])
+            print(response.usage_metadata["total_tokens"])
 
     Response metadata
         .. code-block:: python
@@ -632,9 +634,7 @@ class ChatSambaNovaCloud(BaseChatModel):
                     key_name=tool_name, first_tool_only=True
                 )
         elif method == "json_mode":
-            llm = self
-            # TODO bind response format when json mode available by API
-            # llm = self.bind(response_format={"type": "json_object"})
+            llm = self.bind(response_format={"type": "json_object"})
             if is_pydantic_schema:
                 schema = cast(Type[BaseModel], schema)
                 output_parser = PydanticOutputParser(pydantic_object=schema)
@@ -778,6 +778,16 @@ class ChatSambaNovaCloud(BaseChatModel):
                     invalid_tool_calls.append(
                         make_invalid_tool_call(raw_tool_call, str(e))
                     )
+        if response_dict.get("usage") is not None:
+            usage_metadata = {
+                "input_tokens": response_dict.get("usage", {}).get("prompt_tokens", 0),
+                "output_tokens": response_dict.get("usage", {}).get(
+                    "completion_tokens", 0
+                ),
+                "total_tokens": response_dict.get("usage", {}).get("total_tokens", 0),
+            }
+        else:
+            usage_metadata = None
         message = AIMessage(
             content=content,
             additional_kwargs=additional_kwargs,
@@ -790,6 +800,7 @@ class ChatSambaNovaCloud(BaseChatModel):
                 "system_fingerprint": response_dict["system_fingerprint"],
                 "created": response_dict["created"],
             },
+            usage_metadata=usage_metadata,
             id=response_dict["id"],
         )
         return message
@@ -843,6 +854,7 @@ class ChatSambaNovaCloud(BaseChatModel):
                             f"{event.data}."
                         )
                     metadata = {}
+                    usage_metadata: Optional[UsageMetadata] = None
                     tool_calls = []
                     invalid_tool_calls = []
                     additional_kwargs = {}
@@ -884,6 +896,20 @@ class ChatSambaNovaCloud(BaseChatModel):
                             "system_fingerprint": data.get("system_fingerprint"),
                             "created": data.get("created"),
                         }
+                    if data.get("usage") is not None:
+                        usage_metadata = {
+                            "input_tokens": data.get("usage", {}).get(
+                                "prompt_tokens", 0
+                            ),
+                            "output_tokens": data.get("usage", {}).get(
+                                "completion_tokens", 0
+                            ),
+                            "total_tokens": data.get("usage", {}).get(
+                                "total_tokens", 0
+                            ),
+                        }
+                    else:
+                        usage_metadata = None
                     chunk = AIMessageChunk(
                         content=content,
                         id=id,
@@ -891,6 +917,7 @@ class ChatSambaNovaCloud(BaseChatModel):
                         invalid_tool_calls=invalid_tool_calls,
                         additional_kwargs=additional_kwargs,
                         response_metadata=metadata,
+                        usage_metadata=usage_metadata,
                     )
                     yield chunk
 
@@ -1130,8 +1157,9 @@ class ChatSambaStudio(BaseChatModel):
         .. code-block:: python
 
             response = chat.invoke(messages)
-            print(response.response_metadata["usage"]["prompt_tokens"]
-            print(response.response_metadata["usage"]["total_tokens"]
+            print(response.usage_metadata["input_tokens"])
+            print(response.usage_metadata["completion_tokens"])
+            print(response.usage_metadata["total_tokens"])
 
     Response metadata
         .. code-block:: python
@@ -1557,9 +1585,7 @@ class ChatSambaStudio(BaseChatModel):
                     key_name=tool_name, first_tool_only=True
                 )
         elif method == "json_mode":
-            llm = self
-            # TODO bind response format when json mode available by API
-            # llm = self.bind(response_format={"type": "json_object"})
+            llm = self.bind(response_format={"type": "json_object"})
             if is_pydantic_schema:
                 schema = cast(Type[BaseModel], schema)
                 output_parser = PydanticOutputParser(pydantic_object=schema)
@@ -1883,6 +1909,20 @@ class ChatSambaStudio(BaseChatModel):
                 "system_fingerprint": response_dict["system_fingerprint"],
                 "created": response_dict["created"],
             }
+            if response_dict.get("usage") is not None:
+                usage_metadata = {
+                    "input_tokens": response_dict.get("usage", {}).get(
+                        "prompt_tokens", 0
+                    ),
+                    "output_tokens": response_dict.get("usage", {}).get(
+                        "completion_tokens", 0
+                    ),
+                    "total_tokens": response_dict.get("usage", {}).get(
+                        "total_tokens", 0
+                    ),
+                }
+            else:
+                usage_metadata = None
             raw_tool_calls = response_dict["choices"][0]["message"].get("tool_calls")
             if raw_tool_calls:
                 additional_kwargs["tool_calls"] = raw_tool_calls
@@ -1905,6 +1945,17 @@ class ChatSambaStudio(BaseChatModel):
             content = response_dict["items"][0]["value"]["completion"]
             id = response_dict["items"][0]["id"]
             response_metadata = response_dict["items"][0]
+            usage_metadata = {
+                "input_tokens": response_dict["items"][0]["value"].get(
+                    "prompt_tokens_count", 0
+                ),
+                "output_tokens": response_dict["items"][0]["value"].get(
+                    "completion_tokens_count", 0
+                ),
+                "total_tokens": response_dict["items"][0]["value"].get(
+                    "total_tokens_count", 0
+                ),
+            }
             raw_tool_calls = response_dict["items"][0]["value"].get("tool_calls")
             if raw_tool_calls:
                 additional_kwargs["tool_calls"] = raw_tool_calls
@@ -1927,6 +1978,17 @@ class ChatSambaStudio(BaseChatModel):
             content = response_dict["predictions"][0]["completion"]
             id = None
             response_metadata = response_dict
+            usage_metadata = {
+                "input_tokens": response_dict["predictions"][0].get(
+                    "prompt_tokens_count", 0
+                ),
+                "output_tokens": response_dict["predictions"][0].get(
+                    "completion_tokens_count", 0
+                ),
+                "total_tokens": response_dict["predictions"][0].get(
+                    "total_tokens_count", 0
+                ),
+            }
 
         else:
             raise ValueError(
@@ -1940,6 +2002,7 @@ class ChatSambaStudio(BaseChatModel):
             tool_calls=tool_calls,
             invalid_tool_calls=invalid_tool_calls,
             response_metadata=response_metadata,
+            usage_metadata=usage_metadata,
             id=id,
         )
 
@@ -1994,6 +2057,7 @@ class ChatSambaStudio(BaseChatModel):
                                 f"{event.data}."
                             )
                         metadata = {}
+                        usage_metadata: Optional[UsageMetadata] = None
                         tool_calls = []
                         invalid_tool_calls = []
                         additional_kwargs = {}
@@ -2045,6 +2109,20 @@ class ChatSambaStudio(BaseChatModel):
                                 "system_fingerprint": data.get("system_fingerprint"),
                                 "created": data.get("created"),
                             }
+                        if data.get("usage") is not None:
+                            usage_metadata = {
+                                "input_tokens": data.get("usage", {}).get(
+                                    "prompt_tokens", 0
+                                ),
+                                "output_tokens": data.get("usage", {}).get(
+                                    "completion_tokens", 0
+                                ),
+                                "total_tokens": data.get("usage", {}).get(
+                                    "total_tokens", 0
+                                ),
+                            }
+                        else:
+                            usage_metadata = None
                         chunk = AIMessageChunk(
                             content=content,
                             id=id,
@@ -2052,6 +2130,7 @@ class ChatSambaStudio(BaseChatModel):
                             invalid_tool_calls=invalid_tool_calls,
                             additional_kwargs=additional_kwargs,
                             response_metadata=metadata,
+                            usage_metadata=usage_metadata,
                         )
                         yield chunk
 
@@ -2066,13 +2145,16 @@ class ChatSambaStudio(BaseChatModel):
             for line in response.iter_lines():
                 try:
                     metadata = {}
+                    usage_metadata = None
                     tool_calls = []
                     invalid_tool_calls = []
                     additional_kwargs = {}
                     data = json.loads(line)
                     content = data["result"]["items"][0]["value"]["stream_token"]
                     id = data["result"]["items"][0]["id"]
-                    raw_tool_calls = data["result"]["items"][0]["value"].get("tool_calls")
+                    raw_tool_calls = data["result"]["items"][0]["value"].get(
+                        "tool_calls"
+                    )
                     if raw_tool_calls:
                         additional_kwargs["tool_calls"] = raw_tool_calls
                         for raw_tool_call in raw_tool_calls:
@@ -2124,6 +2206,17 @@ class ChatSambaStudio(BaseChatModel):
                                 ].get("batch_size_used"),
                             },
                         }
+                        usage_metadata = {
+                            "input_tokens": data["result"]["items"][0]["value"].get(
+                                "prompt_tokens_count", 0
+                            ),
+                            "output_tokens": data["result"]["items"][0]["value"].get(
+                                "completion_tokens_count", 0
+                            ),
+                            "total_tokens": data["result"]["items"][0]["value"].get(
+                                "total_tokens_count", 0
+                            ),
+                        }
                     yield AIMessageChunk(
                         content=content,
                         id=id,
@@ -2131,6 +2224,7 @@ class ChatSambaStudio(BaseChatModel):
                         invalid_tool_calls=invalid_tool_calls,
                         response_metadata=metadata,
                         additional_kwargs=additional_kwargs,
+                        usage_metadata=usage_metadata,
                     )
 
                 except Exception as e:
@@ -2146,6 +2240,8 @@ class ChatSambaStudio(BaseChatModel):
                     data = json.loads(line)
                     content = data["result"]["responses"][0]["stream_token"]
                     id = None
+                    metadata = {}
+                    usage_metadata = None
                     if data["result"]["responses"][0]["is_last_response"]:
                         metadata = {
                             "finish_reason": data["result"]["responses"][0].get(
@@ -2182,12 +2278,22 @@ class ChatSambaStudio(BaseChatModel):
                                 ),
                             },
                         }
-                    else:
-                        metadata = {}
+                        usage_metadata = {
+                            "input_tokens": data["result"]["responses"][0].get(
+                                "prompt_tokens_count", 0
+                            ),
+                            "output_tokens": data["result"]["responses"][0].get(
+                                "completion_tokens_count", 0
+                            ),
+                            "total_tokens": data["result"]["responses"][0].get(
+                                "total_tokens_count", 0
+                            ),
+                        }
                     yield AIMessageChunk(
                         content=content,
                         id=id,
                         response_metadata=metadata,
+                        usage_metadata=usage_metadata,
                         additional_kwargs={},
                     )
 
