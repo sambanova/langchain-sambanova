@@ -4,7 +4,7 @@ from typing import Type
 
 from langchain_tests.unit_tests import EmbeddingsUnitTests
 
-from langchain_sambanova.embeddings import SambaStudioEmbeddings
+from langchain_sambanova.embeddings import SambaStudioEmbeddings, SambaNovaCloudEmbeddings
 
 
 class TestSambaStudioEmbeddingsBase(EmbeddingsUnitTests):
@@ -14,4 +14,13 @@ class TestSambaStudioEmbeddingsBase(EmbeddingsUnitTests):
 
     @property
     def embedding_model_params(self) -> dict:
-        return {"model": "nest-embed-001"}
+        return {"model": "nest-embed-001"} # TODO check kwargs??
+
+class TestSambaNovaCloudEmbeddingsBase(EmbeddingsUnitTests):
+    @property
+    def embeddings_class(self) -> Type[SambaNovaCloudEmbeddings]:
+        return SambaNovaCloudEmbeddings
+
+    @property
+    def embedding_model_params(self) -> dict:
+        return {"model": "nest-embed-001"} # TODO check model name
