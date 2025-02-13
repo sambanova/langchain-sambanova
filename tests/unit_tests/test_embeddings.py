@@ -14,7 +14,7 @@ class TestSambaStudioEmbeddingsBase(EmbeddingsUnitTests):
 
     @property
     def embedding_model_params(self) -> dict:
-        return {"model": "nest-embed-001"} # TODO check kwargs??
+        return {"model": "nest-embed-001"}
 
 class TestSambaNovaCloudEmbeddingsBase(EmbeddingsUnitTests):
     @property
@@ -23,4 +23,4 @@ class TestSambaNovaCloudEmbeddingsBase(EmbeddingsUnitTests):
 
     @property
     def embedding_model_params(self) -> dict:
-        return {"model": "nest-embed-001"} # TODO check model name
+        return {"model": "nest-embed-001"}

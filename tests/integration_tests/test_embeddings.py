@@ -14,7 +14,7 @@ class TestSambaStudioEmbeddingsBase(EmbeddingsIntegrationTests):
 
     @property
     def embedding_model_params(self) -> dict:
-        return {"model_kwargs": {"select_expert": "e5-mistral-7b-instruct-32768"}} # check
+        return {"model": "e5-mistral-7b-instruct-8192"}
 
 class TestSambaNovaCloudEmbeddingsBase(EmbeddingsIntegrationTests):
     @property
@@ -23,4 +23,4 @@ class TestSambaNovaCloudEmbeddingsBase(EmbeddingsIntegrationTests):
 
     @property
     def embedding_model_params(self) -> dict:
-        return {"model": "E5-Mistral-7B-Instruct"} # check
+        return {"model": "E5-Mistral-7B-Instruct"}
