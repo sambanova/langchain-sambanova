@@ -60,7 +60,11 @@ jobs:
         
       # Dependencies
       - name: Install Dependencies
-        run: poetry install --no-interaction --with dev
+        run: poetry install --no-interaction --with dev --with lint --with typing
+
+      # Check imports
+      - name: Run check imports
+        run: make check_imports 
 
       # Format an lint
       - name: Run Lint Check
