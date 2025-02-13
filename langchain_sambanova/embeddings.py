@@ -257,7 +257,7 @@ class SambaStudioEmbeddings(BaseModel, Embeddings):
     @classmethod
     def is_lc_serializable(cls) -> bool:
         """Return whether this model can be serialized by Langchain."""
-        return False
+        return True
 
     @property
     def lc_secrets(self) -> Dict[str, str]:
@@ -388,7 +388,7 @@ class SambaStudioEmbeddings(BaseModel, Embeddings):
 
         else:
             raise ValueError(
-                f"Unsupported URL {self.sambastudio_url}"
+                f"Unsupported URL {self.sambastudio_url} "
                 "only generic v1 and generic v2 APIs are supported"
             )
 
