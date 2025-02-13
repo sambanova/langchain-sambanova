@@ -3,6 +3,7 @@
 from typing import Any, Dict, Generator, List, Optional
 
 import requests
+import urllib.parse
 from langchain_core.embeddings import Embeddings
 from langchain_core.utils import convert_to_secret_str, get_from_dict_or_env
 from pydantic import BaseModel, Field, SecretStr
@@ -80,15 +81,15 @@ class SambaNovaCloudEmbeddings(BaseModel, Embeddings):
 
     def __init__(self, **kwargs: Any) -> None:
         """init and validate environment variables"""
-        kwargs["sambanova_url"] = get_from_dict_or_env(
+        url = get_from_dict_or_env(
             kwargs,
             "sambanova_url",
             "SAMBANOVA_URL",
-            default="https://api.sambanova.ai/v1/embeddings",
+            default="https://api.sambanova.ai/v1/",
         )
-        kwargs["sambanova_url"] = kwargs["sambanova_url"].replace(
-            "chat/completions", "embeddings"
-        )  # TODO check
+        url = url.replace("embeddings", "")
+        url = url.replace("chat/completions", "")
+        kwargs["sambanova_url"] = urllib.parse.urljoin(url+"/", "embeddings")
         kwargs["sambanova_api_key"] = convert_to_secret_str(
             get_from_dict_or_env(kwargs, "sambanova_api_key", "SAMBANOVA_API_KEY")
         )
