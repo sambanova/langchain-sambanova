@@ -155,7 +155,7 @@ class SambaNovaCloudEmbeddings(BaseModel, Embeddings):
                 response.json(),
             )
 
-        return embeddings  # TODO check
+        return embeddings
 
     def embed_query(self, text: str) -> List[float]:
         """Returns a list of embeddings for the given sentences.
@@ -197,7 +197,7 @@ class SambaNovaCloudEmbeddings(BaseModel, Embeddings):
                 response.json(),
             )
 
-        return embedding  # TODO check
+        return embedding
 
 
 class SambaStudioEmbeddings(BaseModel, Embeddings):
