@@ -713,7 +713,7 @@ class ChatSambaNovaCloud(BaseChatModel):
                 "stream": True,
                 "stream_options": self.stream_options,
                 **kwargs,
-                **self.model_kwargs
+                **self.model_kwargs,
             }
         else:
             data = {
@@ -724,7 +724,7 @@ class ChatSambaNovaCloud(BaseChatModel):
                 "temperature": self.temperature,
                 "top_p": self.top_p,
                 **kwargs,
-                **self.model_kwargs
+                **self.model_kwargs,
             }
         http_session = requests.Session()
         response = http_session.post(
@@ -1790,7 +1790,7 @@ class ChatSambaStudio(BaseChatModel):
                 "stream": streaming,
                 "stream_options": self.stream_options,
                 **kwargs,
-                **self.model_kwargs
+                **self.model_kwargs,
             }
             data = {key: value for key, value in data.items() if value is not None}
             headers = {
@@ -1813,7 +1813,7 @@ class ChatSambaStudio(BaseChatModel):
                 "top_p": self.top_p,
                 "do_sample": self.do_sample,
                 **kwargs,
-                **self.model_kwargs
+                **self.model_kwargs,
             }
             params = {key: value for key, value in params.items() if value is not None}
             data = {"items": items, "params": params}
@@ -1837,7 +1837,7 @@ class ChatSambaStudio(BaseChatModel):
                 "top_p": self.top_p,
                 "do_sample": self.do_sample,
                 **kwargs,
-                **self.model_kwargs
+                **self.model_kwargs,
             }
             params = {
                 key: {"type": type(value).__name__, "value": str(value)}
