@@ -22,13 +22,14 @@ If you are a SambaNovaCloud user:
 ```bash
 export SAMBANOVA_API_KEY="your-sambanova-cloud-api-key-here"
 ```
+> You can obtain a free SambaNovaCloud API key [here](https://cloud.sambanova.ai/)
 
 or if you are SambaStudio User
 
 ```bash
+export SAMBASTUDIO_URL="your-sambastudio-endpoint-url-here"
 export SAMBASTUDIO_API_KEY="your-sambastudio-api-key-here"
 ```
-> You can obtain a free SambaNovaCloud API key [here](https://cloud.sambanova.ai/)
 
 ## Chat Models
 
@@ -61,6 +62,19 @@ llm.invoke("Tell me a joke about artificial intelligence.")
 ```
 
 ## Embeddings
+
+### SambaNova Cloud Embeddings
+
+`SambaNovaCloudEmbeddings` class exposes embeddings from SambaNovaCloud.
+
+```python
+from langchain_sambanova import SambaNovaCloudEmbeddings
+
+embeddings = SambaNovaCloudEmbeddings(
+    model = "E5-Mistral-7B-Instruct"
+)
+embeddings.embed_query("What is the meaning of life?")
+```
 
 ### SambaStudio Embeddings
 
