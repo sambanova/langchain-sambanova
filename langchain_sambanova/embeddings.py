@@ -1,9 +1,9 @@
 """SambaNova embedding models."""
 
+import urllib.parse
 from typing import Any, Dict, Generator, List, Optional
 
 import requests
-import urllib.parse
 from langchain_core.embeddings import Embeddings
 from langchain_core.utils import convert_to_secret_str, get_from_dict_or_env
 from pydantic import BaseModel, Field, SecretStr
@@ -89,7 +89,7 @@ class SambaNovaCloudEmbeddings(BaseModel, Embeddings):
         )
         url = url.replace("embeddings", "")
         url = url.replace("chat/completions", "")
-        kwargs["sambanova_url"] = urllib.parse.urljoin(url+"/", "embeddings")
+        kwargs["sambanova_url"] = urllib.parse.urljoin(url + "/", "embeddings")
         kwargs["sambanova_api_key"] = convert_to_secret_str(
             get_from_dict_or_env(kwargs, "sambanova_api_key", "SAMBANOVA_API_KEY")
         )

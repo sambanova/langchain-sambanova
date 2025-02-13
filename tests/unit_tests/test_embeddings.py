@@ -4,7 +4,10 @@ from typing import Type
 
 from langchain_tests.unit_tests import EmbeddingsUnitTests
 
-from langchain_sambanova.embeddings import SambaStudioEmbeddings, SambaNovaCloudEmbeddings
+from langchain_sambanova.embeddings import (
+    SambaNovaCloudEmbeddings,
+    SambaStudioEmbeddings,
+)
 
 
 class TestSambaStudioEmbeddingsBase(EmbeddingsUnitTests):
@@ -15,6 +18,7 @@ class TestSambaStudioEmbeddingsBase(EmbeddingsUnitTests):
     @property
     def embedding_model_params(self) -> dict:
         return {"model": "nest-embed-001"}
+
 
 class TestSambaNovaCloudEmbeddingsBase(EmbeddingsUnitTests):
     @property

@@ -4,7 +4,10 @@ from typing import Type
 
 from langchain_tests.integration_tests import EmbeddingsIntegrationTests
 
-from langchain_sambanova.embeddings import SambaStudioEmbeddings, SambaNovaCloudEmbeddings
+from langchain_sambanova.embeddings import (
+    SambaNovaCloudEmbeddings,
+    SambaStudioEmbeddings,
+)
 
 
 class TestSambaStudioEmbeddingsBase(EmbeddingsIntegrationTests):
@@ -15,6 +18,7 @@ class TestSambaStudioEmbeddingsBase(EmbeddingsIntegrationTests):
     @property
     def embedding_model_params(self) -> dict:
         return {"model": "e5-mistral-7b-instruct-8192"}
+
 
 class TestSambaNovaCloudEmbeddingsBase(EmbeddingsIntegrationTests):
     @property
