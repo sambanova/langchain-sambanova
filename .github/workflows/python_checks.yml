@@ -20,25 +20,51 @@ on:
   schedule:
     - cron: '0 12 * * 1'
 
+env:
+  PYTHON_VERSION: "3.11"
+  POETRY_VERSION: "1.8.2"
+  POETRY_URL: https://install.python-poetry.org
+
 jobs:
   build:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - name: Checkout
+        uses: actions/checkout@v4
       
       # Python
-      - name: Install Python
+      - name: Install Python ${{ env.PYTHON_VERSION }}
         uses: actions/setup-python@v5
         with:
-          python-version: "3.11"
-          cache: "poetry"
+          python-version: ${{ env.PYTHON_VERSION }}
+        id: setup_python
+
+      # Cache and Poetry dependencies
+      - name: Cache Poetry dependencies
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/pypoetry
+          key: poetry-cache-${{ runner.os }}-${{ steps.setup_python.outputs.python-version }}-${{ env.POETRY_VERSION }}
+
+      - name: Cache Packages
+        uses: actions/cache@v4
+        with:
+          path: ~/.local
+          key: poetry-local-${{ runner.os }}-${{ steps.setup_python.outputs.python-version }}-${{ hashFiles('**/poetry.lock') }}
       
-      # Dependencies
-      - name: Install Poetry
-        run: pipx install poetry
+      - name: Install Poetry ${{ env.POETRY_VERSION }}
+        run: |
+          curl -sSL ${{ env.POETRY_URL }} | python - --version ${{ env.POETRY_VERSION }}
+          export PATH="$HOME/.local/bin:$PATH"
+          echo "$HOME/.local/bin" >> $GITHUB_PATH
         
+      # Dependencies
       - name: Install Dependencies
-        run: poetry install --no-interaction --with dev
+        run: poetry install --no-interaction --with dev --with lint --with typing --with test
+
+      # Check imports
+      - name: Run check imports
+        run: make check_imports 
 
       # Format an lint
       - name: Run Lint Check

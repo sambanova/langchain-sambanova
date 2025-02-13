@@ -129,6 +129,7 @@ class ChatSambaNovaCloud(BaseChatModel):
                 temperature = model temperature,
                 top_p = model top p,
                 stream_options = include usage to get generation metrics
+                model_kwargs: Optional = Extra Key word arguments to pass to the model.
             )
 
     Key init args — completion params:
@@ -144,6 +145,8 @@ class ChatSambaNovaCloud(BaseChatModel):
             model top p
         stream_options: dict
             stream options, include usage to get generation metrics
+        model_kwargs: dict
+            Extra Key word arguments to pass to the model.
 
     Key init args — client params:
         sambanova_url: str
@@ -163,7 +166,8 @@ class ChatSambaNovaCloud(BaseChatModel):
                 max_tokens = max number of tokens to generate,
                 temperature = model temperature,
                 top_p = model top p,
-                stream_options = include usage to get generation metrics
+                stream_options = include usage to get generation metrics,
+                model_kwargs: Optional = Extra Key word arguments to pass to the model.
             )
 
     Invoke:
@@ -280,13 +284,16 @@ class ChatSambaNovaCloud(BaseChatModel):
     additional_headers: Dict[str, Any] = Field(default={})
     """Additional headers to sent in request"""
 
+    model_kwargs: Dict[str, Any] = Field(default_factory=dict)
+    """Key word arguments to pass to the model."""
+
     class Config:
         populate_by_name = True
 
     @classmethod
     def is_lc_serializable(cls) -> bool:
         """Return whether this model can be serialized by Langchain."""
-        return False
+        return True
 
     @property
     def lc_secrets(self) -> Dict[str, str]:
@@ -306,6 +313,7 @@ class ChatSambaNovaCloud(BaseChatModel):
             "temperature": self.temperature,
             "top_p": self.top_p,
             "stream_options": self.stream_options,
+            "model_kwargs": self.model_kwargs,
         }
 
     @property
@@ -705,6 +713,7 @@ class ChatSambaNovaCloud(BaseChatModel):
                 "stream": True,
                 "stream_options": self.stream_options,
                 **kwargs,
+                **self.model_kwargs,
             }
         else:
             data = {
@@ -715,6 +724,7 @@ class ChatSambaNovaCloud(BaseChatModel):
                 "temperature": self.temperature,
                 "top_p": self.top_p,
                 **kwargs,
+                **self.model_kwargs,
             }
         http_session = requests.Session()
         response = http_session.post(
@@ -1217,7 +1227,7 @@ class ChatSambaStudio(BaseChatModel):
      or for StandAlone v1 and v2 endpoints) 
     default to llama3 special tokens"""
 
-    model_kwargs: Optional[Dict[str, Any]] = None
+    model_kwargs: Dict[str, Any] = Field(default_factory=dict)
     """Key word arguments to pass to the model."""
 
     additional_headers: Dict[str, Any] = Field(default={})
@@ -1229,7 +1239,7 @@ class ChatSambaStudio(BaseChatModel):
     @classmethod
     def is_lc_serializable(cls) -> bool:
         """Return whether this model can be serialized by Langchain."""
-        return False
+        return True
 
     @property
     def lc_secrets(self) -> Dict[str, str]:
@@ -1780,6 +1790,7 @@ class ChatSambaStudio(BaseChatModel):
                 "stream": streaming,
                 "stream_options": self.stream_options,
                 **kwargs,
+                **self.model_kwargs,
             }
             data = {key: value for key, value in data.items() if value is not None}
             headers = {
@@ -1801,9 +1812,9 @@ class ChatSambaStudio(BaseChatModel):
                 "temperature": self.temperature,
                 "top_p": self.top_p,
                 "do_sample": self.do_sample,
+                **kwargs,
+                **self.model_kwargs,
             }
-            if self.model_kwargs is not None:
-                params = {**params, **self.model_kwargs}
             params = {key: value for key, value in params.items() if value is not None}
             data = {"items": items, "params": params}
             headers = {
@@ -1826,9 +1837,8 @@ class ChatSambaStudio(BaseChatModel):
                 "top_p": self.top_p,
                 "do_sample": self.do_sample,
                 **kwargs,
+                **self.model_kwargs,
             }
-            if self.model_kwargs is not None:
-                params = {**params, **self.model_kwargs}
             params = {
                 key: {"type": type(value).__name__, "value": str(value)}
                 for key, value in params.items()
@@ -1851,7 +1861,7 @@ class ChatSambaStudio(BaseChatModel):
 
         else:
             raise ValueError(
-                f"Unsupported URL{self.sambastudio_url}"
+                f"Unsupported URL{self.sambastudio_url} "
                 "only openai, generic v1 and generic v2 APIs are supported"
             )
 
@@ -1992,7 +2002,7 @@ class ChatSambaStudio(BaseChatModel):
 
         else:
             raise ValueError(
-                f"Unsupported URL{self.sambastudio_url}"
+                f"Unsupported URL{self.sambastudio_url} "
                 "only openai, generic v1 and generic v2 APIs are supported"
             )
 
@@ -2305,7 +2315,7 @@ class ChatSambaStudio(BaseChatModel):
 
         else:
             raise ValueError(
-                f"Unsupported URL{self.sambastudio_url}"
+                f"Unsupported URL{self.sambastudio_url} "
                 "only openai, generic v1 and generic v2 APIs are supported"
             )
 
