@@ -26,7 +26,7 @@ env:
   POETRY_URL: https://install.python-poetry.org
 
 jobs:
-  build:
+  lint:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
