@@ -1,4 +1,4 @@
-name: Python Checks
+name: Tests
 
 on:
   # Runs at every push on main
@@ -24,6 +24,9 @@ env:
   PYTHON_VERSION: "3.11"
   POETRY_VERSION: "1.8.2"
   POETRY_URL: https://install.python-poetry.org
+  SAMBASTUDIO_URL: ${{ secrets.SAMBASTUDIO_URL }}
+  SAMBASTUDIO_API_KEY: ${{ secrets.SAMBASTUDIO_API_KEY }}
+  SAMBANOVA_API_KEY: ${{ secrets.SAMBANOVA_API_KEY }}
 
 jobs:
   test:
