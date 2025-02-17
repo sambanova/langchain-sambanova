@@ -51,7 +51,11 @@ from langchain_core.output_parsers.openai_tools import (
 from langchain_core.outputs import ChatGeneration, ChatGenerationChunk, ChatResult
 from langchain_core.runnables import Runnable, RunnableMap, RunnablePassthrough
 from langchain_core.tools import BaseTool
-from langchain_core.utils import convert_to_secret_str, get_from_dict_or_env
+from langchain_core.utils import (
+    convert_to_secret_str,
+    get_from_dict_or_env,
+    secret_from_env,
+)
 from langchain_core.utils.function_calling import convert_to_openai_tool
 from langchain_core.utils.pydantic import is_basemodel_subclass
 from pydantic import BaseModel, Field, SecretStr
@@ -260,7 +264,10 @@ class ChatSambaNovaCloud(BaseChatModel):
     sambanova_url: str = Field(default="")
     """SambaNova Cloud Url"""
 
-    sambanova_api_key: SecretStr = Field(default=SecretStr(""))
+    sambanova_api_key: Optional[SecretStr] = Field(
+        alias="api_key",
+        default_factory=secret_from_env("SAMBANOVA_API_KEY", default=None),
+    )
     """SambaNova Cloud api key"""
 
     model: str = Field(default="Meta-Llama-3.1-8B-Instruct")
@@ -294,6 +301,11 @@ class ChatSambaNovaCloud(BaseChatModel):
     def is_lc_serializable(cls) -> bool:
         """Return whether this model can be serialized by Langchain."""
         return True
+
+    @classmethod
+    def get_lc_namespace(cls) -> List[str]:
+        """Get the namespace of the langchain object."""
+        return ["langchain_sambanova", "chat_models"]
 
     @property
     def lc_secrets(self) -> Dict[str, str]:
@@ -631,7 +643,14 @@ class ChatSambaNovaCloud(BaseChatModel):
                     " Received None."
                 )
             tool_name = convert_to_openai_tool(schema)["function"]["name"]
-            llm = self.bind_tools([schema], tool_choice=tool_name)
+            llm = self.bind_tools(
+                [schema], 
+                tool_choice=tool_name, 
+                structured_output_format={
+                    "kwargs": {"method": "function_calling"},
+                    "schema": schema,
+                    }
+                )
             if is_pydantic_schema:
                 output_parser: OutputParserLike[Any] = PydanticToolsParser(
                     tools=[schema],  # type: ignore
@@ -642,7 +661,15 @@ class ChatSambaNovaCloud(BaseChatModel):
                     key_name=tool_name, first_tool_only=True
                 )
         elif method == "json_mode":
-            llm = self.bind(response_format={"type": "json_object"})
+            llm = self.bind(
+                response_format={"type": "json_object"},
+                structured_output_format={
+                    "kwargs": {
+                        "method": "json_mode"
+                        },
+                    "schema": schema,
+                    }
+                )
             if is_pydantic_schema:
                 schema = cast(Type[BaseModel], schema)
                 output_parser = PydanticOutputParser(pydantic_object=schema)
@@ -660,6 +687,10 @@ class ChatSambaNovaCloud(BaseChatModel):
             # update example
             # llm = self.bind(
             #   response_format={"type": "json_object", "json_schema": schema}
+            #   structured_output_format={
+            #     "kwargs": {"method": "json_schema"},
+            #     "schema": schema,
+            # },
             # )
             if is_pydantic_schema:
                 schema = cast(Type[BaseModel], schema)
@@ -1181,7 +1212,10 @@ class ChatSambaStudio(BaseChatModel):
     sambastudio_url: str = Field(default="")
     """SambaStudio Url"""
 
-    sambastudio_api_key: SecretStr = Field(default=SecretStr(""))
+    sambastudio_api_key: Optional[SecretStr] = Field(
+        alias="api_key",
+        default_factory=secret_from_env("SAMBASTUDIO_API_KEY", default=None),
+    )
     """SambaStudio api key"""
 
     base_url: str = Field(default="", exclude=True)
@@ -1240,6 +1274,11 @@ class ChatSambaStudio(BaseChatModel):
     def is_lc_serializable(cls) -> bool:
         """Return whether this model can be serialized by Langchain."""
         return True
+    
+    @classmethod
+    def get_lc_namespace(cls) -> List[str]:
+        """Get the namespace of the langchain object."""
+        return ["langchain_sambanova", "chat_models"]
 
     @property
     def lc_secrets(self) -> Dict[str, str]:
@@ -1584,7 +1623,14 @@ class ChatSambaStudio(BaseChatModel):
                     "Received None."
                 )
             tool_name = convert_to_openai_tool(schema)["function"]["name"]
-            llm = self.bind_tools([schema], tool_choice=tool_name)
+            llm = self.bind_tools(
+                [schema], 
+                tool_choice=tool_name,
+                structured_output_format={
+                    "kwargs": {"method": "function_calling"},
+                    "schema": schema,
+                    }
+                )
             if is_pydantic_schema:
                 output_parser: OutputParserLike[Any] = PydanticToolsParser(
                     tools=[schema],  # type: ignore[list-item]
@@ -1595,7 +1641,15 @@ class ChatSambaStudio(BaseChatModel):
                     key_name=tool_name, first_tool_only=True
                 )
         elif method == "json_mode":
-            llm = self.bind(response_format={"type": "json_object"})
+            llm = self.bind(
+                response_format={"type": "json_object"},
+                structured_output_format={
+                    "kwargs": {
+                        "method": "json_mode"
+                        },
+                    "schema": schema,
+                    }
+                )
             if is_pydantic_schema:
                 schema = cast(Type[BaseModel], schema)
                 output_parser = PydanticOutputParser(pydantic_object=schema)
@@ -1613,6 +1667,10 @@ class ChatSambaStudio(BaseChatModel):
             # update example
             # llm = self.bind(
             #   response_format={"type": "json_object", "json_schema": schema}
+            #   structured_output_format={
+            #     "kwargs": {"method": "json_schema"},
+            #     "schema": schema,
+            # },
             # )
             if is_pydantic_schema:
                 schema = cast(Type[BaseModel], schema)
