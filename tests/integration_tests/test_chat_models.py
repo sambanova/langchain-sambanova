@@ -59,7 +59,7 @@ class TestSambaStudioCloudBase(ChatModelIntegrationTests):
 
     @property
     def has_structured_output(self) -> bool:
-        return False
+        return True
 
     @property
     def returns_usage_metadata(self) -> bool:
