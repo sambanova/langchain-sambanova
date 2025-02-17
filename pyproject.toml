@@ -4,7 +4,7 @@ build-backend = "poetry.core.masonry.api"
 
 [tool.poetry]
 name = "langchain-sambanova"
-version = "0.1.1"
+version = "0.1.2"
 description = "An integration package connecting SambaNova and LangChain"
 authors = ["SambaNova Systems"]
 readme = "README.md"
@@ -20,7 +20,8 @@ disallow_untyped_defs = "True"
 
 [tool.poetry.dependencies]
 python = ">=3.9,<4.0"
-langchain-core = "^0.3.15"
+langchain-core = "^0.3.34"
+langchain = "^0.3.18"
 types-requests = "*"
 sseclient-py = ">=1.8.0,<2.0"
 
@@ -60,7 +61,7 @@ pytest = "^7.4.3"
 pytest-asyncio = "^0.23.2"
 pytest-socket = "^0.7.0"
 pytest-watcher = "^0.3.4"
-langchain-tests = "^0.3.5"
+langchain-tests = "^0.3.11"
 
 [tool.poetry.group.codespell.dependencies]
 codespell = "^2.2.6"
