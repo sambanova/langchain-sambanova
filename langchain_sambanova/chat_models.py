@@ -644,13 +644,13 @@ class ChatSambaNovaCloud(BaseChatModel):
                 )
             tool_name = convert_to_openai_tool(schema)["function"]["name"]
             llm = self.bind_tools(
-                [schema], 
-                tool_choice=tool_name, 
+                [schema],
+                tool_choice=tool_name,
                 structured_output_format={
                     "kwargs": {"method": "function_calling"},
                     "schema": schema,
-                    }
-                )
+                },
+            )
             if is_pydantic_schema:
                 output_parser: OutputParserLike[Any] = PydanticToolsParser(
                     tools=[schema],  # type: ignore
@@ -664,12 +664,10 @@ class ChatSambaNovaCloud(BaseChatModel):
             llm = self.bind(
                 response_format={"type": "json_object"},
                 structured_output_format={
-                    "kwargs": {
-                        "method": "json_mode"
-                        },
+                    "kwargs": {"method": "json_mode"},
                     "schema": schema,
-                    }
-                )
+                },
+            )
             if is_pydantic_schema:
                 schema = cast(Type[BaseModel], schema)
                 output_parser = PydanticOutputParser(pydantic_object=schema)
@@ -758,6 +756,7 @@ class ChatSambaNovaCloud(BaseChatModel):
                 **self.model_kwargs,
             }
         http_session = requests.Session()
+        assert self.sambanova_api_key is not None
         response = http_session.post(
             self.sambanova_url,
             headers={
@@ -1274,7 +1273,7 @@ class ChatSambaStudio(BaseChatModel):
     def is_lc_serializable(cls) -> bool:
         """Return whether this model can be serialized by Langchain."""
         return True
-    
+
     @classmethod
     def get_lc_namespace(cls) -> List[str]:
         """Get the namespace of the langchain object."""
@@ -1624,13 +1623,13 @@ class ChatSambaStudio(BaseChatModel):
                 )
             tool_name = convert_to_openai_tool(schema)["function"]["name"]
             llm = self.bind_tools(
-                [schema], 
+                [schema],
                 tool_choice=tool_name,
                 structured_output_format={
                     "kwargs": {"method": "function_calling"},
                     "schema": schema,
-                    }
-                )
+                },
+            )
             if is_pydantic_schema:
                 output_parser: OutputParserLike[Any] = PydanticToolsParser(
                     tools=[schema],  # type: ignore[list-item]
@@ -1644,12 +1643,10 @@ class ChatSambaStudio(BaseChatModel):
             llm = self.bind(
                 response_format={"type": "json_object"},
                 structured_output_format={
-                    "kwargs": {
-                        "method": "json_mode"
-                        },
+                    "kwargs": {"method": "json_mode"},
                     "schema": schema,
-                    }
-                )
+                },
+            )
             if is_pydantic_schema:
                 schema = cast(Type[BaseModel], schema)
                 output_parser = PydanticOutputParser(pydantic_object=schema)
@@ -1834,6 +1831,8 @@ class ChatSambaStudio(BaseChatModel):
         Returns:
             A request Response object
         """
+
+        assert self.sambastudio_api_key is not None
 
         # create request payload for openai compatible API
         if "chat/completions" in self.sambastudio_url:
