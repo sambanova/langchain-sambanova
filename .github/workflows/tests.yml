@@ -41,13 +41,6 @@ jobs:
         with:
           python-version: ${{ env.PYTHON_VERSION }}
         id: setup_python
-
-      # Cache and Poetry dependencies
-      - name: Cache Poetry dependencies
-        uses: actions/cache@v4
-        with:
-          path: ~/.cache/pypoetry
-          key: poetry-cache-${{ runner.os }}-${{ steps.setup_python.outputs.python-version }}-${{ env.POETRY_VERSION }}
       
       - name: Install Poetry ${{ env.POETRY_VERSION }}
         run: |
