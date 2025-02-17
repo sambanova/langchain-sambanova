@@ -44,7 +44,7 @@ class TestSambaNovaCloudBase(ChatModelIntegrationTests):
         pytest.skip("Test skipped")
 
 
-class TestSambaStudioCloudBase(ChatModelIntegrationTests):
+class TestSambaStudioBase(ChatModelIntegrationTests):
     @property
     def chat_model_class(self) -> Type[ChatSambaStudio]:
         return ChatSambaStudio
@@ -54,11 +54,11 @@ class TestSambaStudioCloudBase(ChatModelIntegrationTests):
         return {"model": "Meta-Llama-3-70B-Instruct-4096", "temperature": 0}
 
     @property
-    def has_tool_calling(self) -> bool:
+    def has_structured_output(self) -> bool:
         return False
 
     @property
-    def has_structured_output(self) -> bool:
+    def has_tool_calling(self) -> bool:
         return False
 
     @property

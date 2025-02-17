@@ -1,6 +1,7 @@
 """SambaNova chat models."""
 
 import json
+import urllib.parse
 from operator import itemgetter
 from typing import (
     Any,
@@ -335,12 +336,15 @@ class ChatSambaNovaCloud(BaseChatModel):
 
     def __init__(self, **kwargs: Any) -> None:
         """init and validate environment variables"""
-        kwargs["sambanova_url"] = get_from_dict_or_env(
+        url = get_from_dict_or_env(
             kwargs,
             "sambanova_url",
             "SAMBANOVA_URL",
-            default="https://api.sambanova.ai/v1/chat/completions",
+            default="https://api.sambanova.ai/v1/",
         )
+        url = url.replace("embeddings", "")
+        url = url.replace("chat/completions", "")
+        kwargs["sambanova_url"] = urllib.parse.urljoin(url + "/", "chat/completions")
         kwargs["sambanova_api_key"] = convert_to_secret_str(
             get_from_dict_or_env(kwargs, "sambanova_api_key", "SAMBANOVA_API_KEY")
         )
@@ -1217,7 +1221,7 @@ class ChatSambaStudio(BaseChatModel):
     )
     """SambaStudio api key"""
 
-    base_url: str = Field(default="", exclude=True)
+    non_streaming_url: str = Field(default="", exclude=True)
     """SambaStudio non streaming Url"""
 
     streaming_url: str = Field(default="", exclude=True)
@@ -1313,16 +1317,24 @@ class ChatSambaStudio(BaseChatModel):
 
     def __init__(self, **kwargs: Any) -> None:
         """init and validate environment variables"""
-        kwargs["sambastudio_url"] = get_from_dict_or_env(
-            kwargs, "sambastudio_url", "SAMBASTUDIO_URL"
+        url = get_from_dict_or_env(kwargs, "sambastudio_url", "SAMBASTUDIO_URL")
+        if "api/v2/predict/generic" not in url and "api/predict/generic" not in url:
+            # if not generic sent is considered openAI compatible API
+            url = url.replace("embeddings", "")
+            url = url.replace("chat/completions", "")
+            kwargs["sambastudio_url"] = urllib.parse.urljoin(
+                url + "/", "chat/completions"
+            )
+        else:
+            # in case is generic v1 or v2 API (full endpoint is in the env)
+            kwargs["sambastudio_url"] = url
+        kwargs["non_streaming_url"], kwargs["streaming_url"] = (
+            self._get_sambastudio_urls(kwargs["sambastudio_url"])
         )
-
         kwargs["sambastudio_api_key"] = convert_to_secret_str(
             get_from_dict_or_env(kwargs, "sambastudio_api_key", "SAMBASTUDIO_API_KEY")
         )
-        kwargs["base_url"], kwargs["streaming_url"] = self._get_sambastudio_urls(
-            kwargs["sambastudio_url"]
-        )
+
         super().__init__(**kwargs)
 
     def bind_tools(
@@ -1795,23 +1807,23 @@ class ChatSambaStudio(BaseChatModel):
             url: string with sambastudio base or streaming endpoint url
 
         Returns:
-            base_url: string with url to do non streaming calls
+            non_streaming_url: string with url to do non streaming calls
             streaming_url: string with url to do streaming calls
         """
         if "chat/completions" in url:
-            base_url = url
-            stream_url = url
+            non_streaming_url = url
+            streaming_url = url
         else:
             if "stream" in url:
-                base_url = url.replace("stream/", "")
-                stream_url = url
+                non_streaming_url = url.replace("stream/", "")
+                streaming_url = url
             else:
-                base_url = url
+                non_streaming_url = url
                 if "generic" in url:
-                    stream_url = "generic/stream".join(url.split("generic"))
+                    streaming_url = "generic/stream".join(url.split("generic"))
                 else:
                     raise ValueError("Unsupported URL")
-        return base_url, stream_url
+        return non_streaming_url, streaming_url
 
     def _handle_request(
         self,
@@ -1929,7 +1941,7 @@ class ChatSambaStudio(BaseChatModel):
             )
         else:
             response = http_session.post(
-                self.base_url, headers=headers, json=data, stream=False
+                self.non_streaming_url, headers=headers, json=data, stream=False
             )
         if response.status_code != 200:
             raise RuntimeError(
