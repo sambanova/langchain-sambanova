@@ -17,7 +17,7 @@ class TestSambaNovaCloudBase(ChatModelIntegrationTests):
 
     @property
     def chat_model_params(self) -> dict:
-        return {"model": "Meta-Llama-3.1-405B-Instruct", "temperature": 0}
+        return {"model": "Meta-Llama-3.1-70B-Instruct", "temperature": 0}
 
     @property
     def has_tool_calling(self) -> bool:
