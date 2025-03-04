@@ -45,6 +45,9 @@ class SambaNovaCloudEmbeddings(BaseModel, Embeddings):
 
     batch_size: int = Field(default=16)
     """Batch size for the embedding models"""
+    
+    max_characters: int = Field(default=8192)
+    """"max characters, longer will be trimmed"""
 
     model_kwargs: Optional[Dict[str, Any]] = None
     """Key word arguments to pass to the model."""
@@ -76,6 +79,7 @@ class SambaNovaCloudEmbeddings(BaseModel, Embeddings):
         return {
             "model": self.model,
             "batch_size": self.batch_size,
+            "max_characters": self.max_characters,
             "model_kwargs": self.model_kwargs,
         }
 
@@ -107,6 +111,21 @@ class SambaNovaCloudEmbeddings(BaseModel, Embeddings):
         for i in range(0, len(texts), batch_size):
             yield texts[i : i + batch_size]
 
+    def _trim_documents(self, texts:  List[str], max_size: int):
+        """Trim text to a max number of characters
+
+        Args:
+            texts (List[str]): lists of text documents
+            max_size (int): max amount of characters per tex document
+            
+        Returns:
+            List[str]: timed text documents list
+        """
+        new_texts = []
+        for text in texts:
+            new_texts.append(text[:max_size])
+        return new_texts
+            
     def embed_documents(
         self, texts: List[str], batch_size: Optional[int] = None
     ) -> List[List[float]]:
@@ -124,7 +143,8 @@ class SambaNovaCloudEmbeddings(BaseModel, Embeddings):
         http_session = requests.Session()
         params: Dict[str, Any] = {}
         embeddings = []
-
+        
+        texts=self._trim_documents(texts, self.max_characters)
         for batch in self._iterate_over_batches(texts, batch_size):
             params = {"model": self.model, "dimensions": self.dimensions}
             if self.model_kwargs is not None:
@@ -174,6 +194,7 @@ class SambaNovaCloudEmbeddings(BaseModel, Embeddings):
             params = {**params, **self.model_kwargs}
         params = {key: value for key, value in params.items() if value is not None}
 
+        text = self._trim_documents([text], self.max_characters)[0]
         data = {"input": text, **params}
 
         response = http_session.post(
