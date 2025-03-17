@@ -111,7 +111,7 @@ class SambaNovaCloudEmbeddings(BaseModel, Embeddings):
         for i in range(0, len(texts), batch_size):
             yield texts[i : i + batch_size]
 
-    def _trim_documents(self, texts: List[str], max_size: int):
+    def _trim_documents(self, texts: List[str], max_size: int) -> List[str]:
         """Trim text to a max number of characters
 
         Args:
