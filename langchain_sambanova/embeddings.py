@@ -156,7 +156,7 @@ class SambaNovaCloudEmbeddings(BaseModel, Embeddings):
         response = http_session.post(
             self.sambanova_url,
             headers={
-                "key": self.sambanova_api_key.get_secret_value(),
+                "Authorization": f"Bearer {self.sambanova_api_key.get_secret_value()}",
                 **self.additional_headers,
             },
             json=data,
@@ -200,7 +200,7 @@ class SambaNovaCloudEmbeddings(BaseModel, Embeddings):
         response = http_session.post(
             self.sambanova_url,
             headers={
-                "key": self.sambanova_api_key.get_secret_value(),
+                "Authorization": f"Bearer {self.sambanova_api_key.get_secret_value()}",
                 **self.additional_headers,
             },
             json=data,
