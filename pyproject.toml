@@ -4,7 +4,7 @@ build-backend = "poetry.core.masonry.api"
 
 [tool.poetry]
 name = "langchain-sambanova"
-version = "0.1.2"
+version = "0.1.3"
 description = "An integration package connecting SambaNova and LangChain"
 authors = ["SambaNova Systems"]
 readme = "README.md"
