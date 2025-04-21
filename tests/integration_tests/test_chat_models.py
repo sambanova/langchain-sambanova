@@ -51,7 +51,7 @@ class TestSambaStudioBase(ChatModelIntegrationTests):
 
     @property
     def chat_model_params(self) -> dict:
-        return {"model": "Meta-Llama-3-70B-Instruct-4096", "temperature": 0}
+        return {"model": "Meta-Llama-3.3-70B-SD-Llama-3.2-1B-TP16", "temperature": 0}
 
     @property
     def has_structured_output(self) -> bool:
