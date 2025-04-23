@@ -46,7 +46,7 @@ class SambaNovaCloudEmbeddings(BaseModel, Embeddings):
     batch_size: int = Field(default=16)
     """Batch size for the embedding models"""
 
-    max_characters: int = Field(default=8192)
+    max_characters: int = Field(default=16384)
     """"max characters, longer will be trimmed"""
 
     model_kwargs: Optional[Dict[str, Any]] = None
@@ -153,27 +153,28 @@ class SambaNovaCloudEmbeddings(BaseModel, Embeddings):
 
             data = {"input": batch, **params}
 
-        response = http_session.post(
-            self.sambanova_url,
-            headers={
-                "Authorization": f"Bearer {self.sambanova_api_key.get_secret_value()}",
-                **self.additional_headers,
-            },
-            json=data,
-        )
-        if response.status_code != 200:
-            raise RuntimeError(
-                f"Sambanova /complete call failed with status code "
-                f"{response.status_code}.\n Details: {response.text}"
+            response = http_session.post(
+                self.sambanova_url,
+                headers={
+                    "Authorization": "Bearer "
+                    f"{self.sambanova_api_key.get_secret_value()}",
+                    **self.additional_headers,
+                },
+                json=data,
             )
-        try:
-            embedding = [item["embedding"] for item in response.json()["data"]]
-            embeddings.extend(embedding)
-        except KeyError:
-            raise KeyError(
-                "'data' not found in endpoint response",
-                response.json(),
-            )
+            if response.status_code != 200:
+                raise RuntimeError(
+                    f"Sambanova /complete call failed with status code "
+                    f"{response.status_code}.\n Details: {response.text}"
+                )
+            try:
+                embedding = [item["embedding"] for item in response.json()["data"]]
+                embeddings.extend(embedding)
+            except KeyError:
+                raise KeyError(
+                    "'data' not found in endpoint response",
+                    response.json(),
+                )
 
         return embeddings
 
@@ -263,8 +264,14 @@ class SambaStudioEmbeddings(BaseModel, Embeddings):
     model: Optional[str] = Field(default=None)
     """The name of the model or expert to use (for Bundle endpoints)"""
 
+    dimensions: Optional[int] = Field(default=None)
+    """shorten embeddings by trimming some values from the end of the sequence"""
+
     batch_size: int = Field(default=32)
     """Batch size for the embedding models"""
+
+    max_characters: int = Field(default=16384)
+    """"max characters, longer will be trimmed"""
 
     model_kwargs: Optional[Dict[str, Any]] = None
     """Key word arguments to pass to the model."""
@@ -302,9 +309,15 @@ class SambaStudioEmbeddings(BaseModel, Embeddings):
 
     def __init__(self, **kwargs: Any) -> None:
         """init and validate environment variables"""
-        kwargs["sambastudio_url"] = get_from_dict_or_env(
-            kwargs, "sambastudio_url", "SAMBASTUDIO_URL"
-        )
+        url = get_from_dict_or_env(kwargs, "sambastudio_url", "SAMBASTUDIO_URL")
+        if "api/v2/predict/generic" not in url and "api/predict/generic" not in url:
+            # if not generic sent is considered openAI compatible API
+            url = url.replace("embeddings", "")
+            url = url.replace("chat/completions", "")
+            kwargs["sambastudio_url"] = urllib.parse.urljoin(url + "/", "embeddings")
+        else:
+            # in case is generic v1 or v2 API (full endpoint is in the env)
+            kwargs["sambastudio_url"] = url
         kwargs["sambastudio_api_key"] = convert_to_secret_str(
             get_from_dict_or_env(kwargs, "sambastudio_api_key", "SAMBASTUDIO_API_KEY")
         )
@@ -321,6 +334,21 @@ class SambaStudioEmbeddings(BaseModel, Embeddings):
         """
         for i in range(0, len(texts), batch_size):
             yield texts[i : i + batch_size]
+
+    def _trim_documents(self, texts: List[str], max_size: int) -> List[str]:
+        """Trim text to a max number of characters
+
+        Args:
+            texts (List[str]): lists of text documents
+            max_size (int): max amount of characters per tex document
+
+        Returns:
+            List[str]: timed text documents list
+        """
+        new_texts = []
+        for text in texts:
+            new_texts.append(text[:max_size])
+        return new_texts
 
     def embed_documents(
         self, texts: List[str], batch_size: Optional[int] = None
@@ -339,6 +367,8 @@ class SambaStudioEmbeddings(BaseModel, Embeddings):
         http_session = requests.Session()
         params: Dict[str, Any] = {}
         embeddings = []
+
+        texts = self._trim_documents(texts, self.max_characters)
 
         if "api/v2/predict/generic" in self.sambastudio_url:
             for batch in self._iterate_over_batches(texts, batch_size):
@@ -407,10 +437,44 @@ class SambaStudioEmbeddings(BaseModel, Embeddings):
                         response.json(),
                     )
 
+        elif "/embeddings" in self.sambastudio_url:
+            for batch in self._iterate_over_batches(texts, batch_size):
+                params = {"model": self.model, "dimensions": self.dimensions}
+                if self.model_kwargs is not None:
+                    params = {**params, **self.model_kwargs}
+                params = {
+                    key: value for key, value in params.items() if value is not None
+                }
+
+                data = {"input": batch, **params}
+
+                response = http_session.post(
+                    self.sambastudio_url,
+                    headers={
+                        "Authorization": f"Bearer "
+                        f"{self.sambastudio_api_key.get_secret_value()}",
+                        **self.additional_headers,
+                    },
+                    json=data,
+                )
+                if response.status_code != 200:
+                    raise RuntimeError(
+                        f"Sambanova /complete call failed with status code "
+                        f"{response.status_code}.\n Details: {response.text}"
+                    )
+                try:
+                    embedding = [item["embedding"] for item in response.json()["data"]]
+                    embeddings.extend(embedding)
+                except KeyError:
+                    raise KeyError(
+                        "'data' not found in endpoint response",
+                        response.json(),
+                    )
+
         else:
             raise ValueError(
                 f"Unsupported URL {self.sambastudio_url} "
-                "only generic v1 and generic v2 APIs are supported"
+                "only v1/embeddings, generic v1 and generic v2 APIs are supported"
             )
 
         return embeddings
@@ -426,6 +490,8 @@ class SambaStudioEmbeddings(BaseModel, Embeddings):
         """
         http_session = requests.Session()
         params: Dict[str, Any] = {}
+
+        text = self._trim_documents([text], self.max_characters)[0]
 
         if "api/v2/predict/generic" in self.sambastudio_url:
             params = {"select_expert": self.model}
@@ -484,10 +550,41 @@ class SambaStudioEmbeddings(BaseModel, Embeddings):
                     response.json(),
                 )
 
+        elif "/embeddings" in self.sambastudio_url:
+            params = {"model": self.model, "dimensions": self.dimensions}
+            if self.model_kwargs is not None:
+                params = {**params, **self.model_kwargs}
+            params = {key: value for key, value in params.items() if value is not None}
+
+            text = self._trim_documents([text], self.max_characters)[0]
+            data = {"input": text, **params}
+
+            response = http_session.post(
+                self.sambastudio_url,
+                headers={
+                    "Authorization": f"Bearer "
+                    f"{self.sambastudio_api_key.get_secret_value()}",
+                    **self.additional_headers,
+                },
+                json=data,
+            )
+            if response.status_code != 200:
+                raise RuntimeError(
+                    f"Sambanova /complete call failed with status code "
+                    f"{response.status_code}.\n Details: {response.text}"
+                )
+            try:
+                embedding = response.json()["data"][0]["embedding"]
+            except KeyError:
+                raise KeyError(
+                    "'data' not found in endpoint response",
+                    response.json(),
+                )
+
         else:
             raise ValueError(
                 f"Unsupported URL {self.sambastudio_url}"
-                "only generic v1 and generic v2 APIs are supported"
+                "only v1/embeddings, generic v1 and generic v2 APIs are supported"
             )
 
         return embedding
