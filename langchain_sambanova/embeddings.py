@@ -6,7 +6,7 @@ from typing import Any, Dict, Generator, List, Optional
 import requests
 from langchain_core.embeddings import Embeddings
 from langchain_core.utils import convert_to_secret_str, get_from_dict_or_env
-from pydantic import BaseModel, Field, SecretStr
+from pydantic import BaseModel, ConfigDict, Field, SecretStr
 
 
 class SambaNovaCloudEmbeddings(BaseModel, Embeddings):
@@ -54,9 +54,11 @@ class SambaNovaCloudEmbeddings(BaseModel, Embeddings):
 
     additional_headers: Dict[str, Any] = Field(default={})
     """Additional headers to send in request"""
-
-    class Config:
-        populate_by_name = True
+    
+    model_config = ConfigDict(
+        populate_by_name=True,
+        protected_namespaces=()
+    )
 
     @classmethod
     def is_lc_serializable(cls) -> bool:
@@ -279,8 +281,10 @@ class SambaStudioEmbeddings(BaseModel, Embeddings):
     additional_headers: Dict[str, Any] = Field(default={})
     """Additional headers to send in request"""
 
-    class Config:
-        populate_by_name = True
+    model_config = ConfigDict(
+        populate_by_name=True,
+        protected_namespaces=()
+    )
 
     @classmethod
     def is_lc_serializable(cls) -> bool:
