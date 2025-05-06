@@ -120,6 +120,7 @@ def _create_message_dicts(messages: List[BaseMessage]) -> List[Dict[str, Any]]:
 def _is_pydantic_class(obj: Any) -> bool:
     return isinstance(obj, type) and is_basemodel_subclass(obj)
 
+
 def _convert_to_openai_response_format(
     schema: Union[dict[str, Any], type], *, strict: Optional[bool] = None
 ) -> Union[dict, TypeBaseModel]:
@@ -339,11 +340,8 @@ class ChatSambaNovaCloud(BaseChatModel):
 
     model_kwargs: Dict[str, Any] = Field(default_factory=dict)
     """Key word arguments to pass to the model."""
-    
-    model_config = ConfigDict(
-        populate_by_name=True,
-        protected_namespaces=()
-    )
+
+    model_config = ConfigDict(populate_by_name=True, protected_namespaces=())
 
     @classmethod
     def is_lc_serializable(cls) -> bool:
@@ -440,9 +438,7 @@ class ChatSambaNovaCloud(BaseChatModel):
         self,
         schema: Optional[Union[Dict[str, Any], Type[BaseModel]]] = None,
         *,
-        method: Literal[
-            "function_calling", "json_mode", "json_schema"
-        ] = "json_schema",
+        method: Literal["function_calling", "json_mode", "json_schema"] = "json_schema",
         include_raw: bool = False,
         strict: bool = False,
         **kwargs: Any,
@@ -480,7 +476,7 @@ class ChatSambaNovaCloud(BaseChatModel):
                 response will be returned. If an error occurs during output parsing it
                 will be caught and returned as well. The final output is always a dict
                 with keys "raw", "parsed", and "parsing_error".
-                
+
             strict:
                 - True:
                     Model output is guaranteed to exactly match the schema.
@@ -747,7 +743,7 @@ class ChatSambaNovaCloud(BaseChatModel):
                 structured_output_format={
                     "kwargs": {"method": "json_schema", "strict": strict},
                     "schema": convert_to_openai_tool(schema),
-                }
+                },
             )
             if is_pydantic_schema:
                 schema = cast(Type[BaseModel], schema)
@@ -1324,11 +1320,8 @@ class ChatSambaStudio(BaseChatModel):
 
     additional_headers: Dict[str, Any] = Field(default={})
     """Additional headers to send in request"""
-    
-    model_config = ConfigDict(
-        populate_by_name=True,
-        protected_namespaces=()
-    )
+
+    model_config = ConfigDict(populate_by_name=True, protected_namespaces=())
 
     @classmethod
     def is_lc_serializable(cls) -> bool:
@@ -1437,9 +1430,7 @@ class ChatSambaStudio(BaseChatModel):
         self,
         schema: Optional[Union[Dict[str, Any], Type[BaseModel]]] = None,
         *,
-        method: Literal[
-            "function_calling", "json_mode", "json_schema"
-        ] = "json_schema",
+        method: Literal["function_calling", "json_mode", "json_schema"] = "json_schema",
         include_raw: bool = False,
         strict: bool = False,
         **kwargs: Any,
@@ -1487,7 +1478,7 @@ class ChatSambaStudio(BaseChatModel):
                     validated.
 
             kwargs: Additional keyword args aren't supported.
-            
+
         Returns:
             A Runnable that takes same inputs as a :class:`langchain_core.language_models.chat.BaseChatModel`.
 
@@ -1744,7 +1735,7 @@ class ChatSambaStudio(BaseChatModel):
                 structured_output_format={
                     "kwargs": {"method": "json_schema", "strict": strict},
                     "schema": convert_to_openai_tool(schema),
-                }
+                },
             )
             if is_pydantic_schema:
                 schema = cast(Type[BaseModel], schema)

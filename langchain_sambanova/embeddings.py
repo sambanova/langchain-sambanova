@@ -54,11 +54,8 @@ class SambaNovaCloudEmbeddings(BaseModel, Embeddings):
 
     additional_headers: Dict[str, Any] = Field(default={})
     """Additional headers to send in request"""
-    
-    model_config = ConfigDict(
-        populate_by_name=True,
-        protected_namespaces=()
-    )
+
+    model_config = ConfigDict(populate_by_name=True, protected_namespaces=())
 
     @classmethod
     def is_lc_serializable(cls) -> bool:
@@ -281,10 +278,7 @@ class SambaStudioEmbeddings(BaseModel, Embeddings):
     additional_headers: Dict[str, Any] = Field(default={})
     """Additional headers to send in request"""
 
-    model_config = ConfigDict(
-        populate_by_name=True,
-        protected_namespaces=()
-    )
+    model_config = ConfigDict(populate_by_name=True, protected_namespaces=())
 
     @classmethod
     def is_lc_serializable(cls) -> bool:
