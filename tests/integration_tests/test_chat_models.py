@@ -35,15 +35,6 @@ class TestSambaNovaCloudBase(ChatModelIntegrationTests):
     def returns_usage_metadata(self) -> bool:
         return True
 
-    @pytest.mark.xfail(
-        reason="omitted test given model can generate non parsable tool call"
-    )
-    def test_structured_few_shot_examples(
-        self, model: BaseChatModel, my_adder_tool: BaseTool
-    ) -> None:
-        pytest.skip("Test skipped")
-
-
 class TestSambaStudioBase(ChatModelIntegrationTests):
     @property
     def chat_model_class(self) -> Type[ChatSambaStudio]:
@@ -51,16 +42,28 @@ class TestSambaStudioBase(ChatModelIntegrationTests):
 
     @property
     def chat_model_params(self) -> dict:
-        return {"model": "Meta-Llama-3.2-3B-Instruct", "temperature": 0}
+        return {"model": "Meta-Llama-3.3-70B-Instruct", "temperature": 0}
+    
+    @property
+    def has_tool_calling(self) -> bool:
+        return True
 
     @property
     def has_structured_output(self) -> bool:
-        return False
+        return True
 
     @property
-    def has_tool_calling(self) -> bool:
-        return False
+    def supports_json_mode(self) -> bool:
+        return True
 
     @property
     def returns_usage_metadata(self) -> bool:
         return True
+
+    @pytest.mark.xfail(
+        reason="omitted test given model can generate non parsable tool call"
+    )
+    def test_structured_few_shot_examples(
+        self, model: BaseChatModel, my_adder_tool: BaseTool
+    ) -> None:
+        pytest.skip("Test skipped")
