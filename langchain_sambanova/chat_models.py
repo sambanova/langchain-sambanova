@@ -57,9 +57,15 @@ from langchain_core.utils import (
     get_from_dict_or_env,
     secret_from_env,
 )
-from langchain_core.utils.function_calling import convert_to_openai_tool
-from langchain_core.utils.pydantic import is_basemodel_subclass
-from pydantic import BaseModel, Field, SecretStr
+from langchain_core.utils.function_calling import (
+    convert_to_openai_function,
+    convert_to_openai_tool,
+)
+from langchain_core.utils.pydantic import (
+    TypeBaseModel,
+    is_basemodel_subclass,
+)
+from pydantic import BaseModel, ConfigDict, Field, SecretStr
 from requests import Response
 
 
@@ -113,6 +119,46 @@ def _create_message_dicts(messages: List[BaseMessage]) -> List[Dict[str, Any]]:
 
 def _is_pydantic_class(obj: Any) -> bool:
     return isinstance(obj, type) and is_basemodel_subclass(obj)
+
+
+def _convert_to_openai_response_format(
+    schema: Union[dict[str, Any], type], *, strict: Optional[bool] = None
+) -> Union[dict, TypeBaseModel]:
+    if isinstance(schema, BaseModel):
+        schema = schema.model_dump()
+    elif isinstance(schema, type) and issubclass(schema, BaseModel):
+        schema = schema.model_json_schema()
+    if (
+        isinstance(schema, dict)
+        and "json_schema" in schema
+        and schema.get("type") == "json_schema"
+    ):
+        response_format = schema
+    elif isinstance(schema, dict) and "name" in schema and "schema" in schema:
+        response_format = {"type": "json_schema", "json_schema": schema}
+    else:
+        if strict is None:
+            if isinstance(schema, dict) and isinstance(schema.get("strict"), bool):
+                strict = schema["strict"]
+            else:
+                strict = False
+        function = convert_to_openai_function(schema, strict=strict)
+        function["schema"] = function.pop("parameters")
+        response_format = {"type": "json_schema", "json_schema": function}
+
+    if (
+        strict is not None
+        and strict is not response_format["json_schema"].get("strict")
+        and isinstance(schema, dict)
+    ):
+        msg = (
+            f"Output schema already has 'strict' value set to "
+            f"{schema['json_schema']['strict']} but 'strict' also passed in to "
+            f"with_structured_output as {strict}. Please make sure that "
+            f"'strict' is only specified in one place."
+        )
+        raise ValueError(msg)
+    return response_format
 
 
 class ChatSambaNovaCloud(BaseChatModel):
@@ -295,8 +341,7 @@ class ChatSambaNovaCloud(BaseChatModel):
     model_kwargs: Dict[str, Any] = Field(default_factory=dict)
     """Key word arguments to pass to the model."""
 
-    class Config:
-        populate_by_name = True
+    model_config = ConfigDict(populate_by_name=True, protected_namespaces=())
 
     @classmethod
     def is_lc_serializable(cls) -> bool:
@@ -393,10 +438,9 @@ class ChatSambaNovaCloud(BaseChatModel):
         self,
         schema: Optional[Union[Dict[str, Any], Type[BaseModel]]] = None,
         *,
-        method: Literal[
-            "function_calling", "json_mode", "json_schema"
-        ] = "function_calling",
+        method: Literal["function_calling", "json_mode", "json_schema"] = "json_schema",
         include_raw: bool = False,
+        strict: bool = False,
         **kwargs: Any,
     ) -> Runnable[LanguageModelInput, Union[Dict[str, Any], BaseModel]]:
         """Model wrapper that returns outputs formatted to match the given schema.
@@ -422,7 +466,7 @@ class ChatSambaNovaCloud(BaseChatModel):
                 to an OpenAI function and the returned model will make use of the
                 function-calling API. If "json_mode" or "json_schema" then OpenAI's
                 JSON mode will be used.
-                Note that if using "json_mode" or "json_schema" then you must include instructions
+                Note that if using "json_mode" then you must include instructions
                 for formatting the output into the desired schema into the model call.
 
             include_raw:
@@ -432,6 +476,16 @@ class ChatSambaNovaCloud(BaseChatModel):
                 response will be returned. If an error occurs during output parsing it
                 will be caught and returned as well. The final output is always a dict
                 with keys "raw", "parsed", and "parsing_error".
+
+            strict:
+                - True:
+                    Model output is guaranteed to exactly match the schema.
+                    The input schema will also be validated
+                - False:
+                    Input schema will not be validated and model output will not be
+                    validated.
+
+            kwargs: Additional keyword args aren't supported.
 
         Returns:
             A Runnable that takes same inputs as a :class:`langchain_core.language_models.chat.BaseChatModel`.
@@ -627,7 +681,6 @@ class ChatSambaNovaCloud(BaseChatModel):
 
                 structured_llm.invoke(
                     "Answer the following question. "
-                    "Make sure to return a JSON blob with keys 'answer' and 'justification'.\n\n"
                     "What's heavier a pound of bricks or a pound of feathers?"
                 )
                 # -> {
@@ -684,16 +737,14 @@ class ChatSambaNovaCloud(BaseChatModel):
                     "`schema` must be specified when method is not `json_mode`."
                     " Received None."
                 )
-            llm = self
-            # TODO bind response format when json schema available by API,
-            # update example
-            # llm = self.bind(
-            #   response_format={"type": "json_object", "json_schema": schema}
-            #   structured_output_format={
-            #     "kwargs": {"method": "json_schema"},
-            #     "schema": schema,
-            # },
-            # )
+            response_format = _convert_to_openai_response_format(schema, strict=strict)
+            llm = self.bind(
+                response_format=response_format,
+                structured_output_format={
+                    "kwargs": {"method": "json_schema", "strict": strict},
+                    "schema": convert_to_openai_tool(schema),
+                },
+            )
             if is_pydantic_schema:
                 schema = cast(Type[BaseModel], schema)
                 output_parser = PydanticOutputParser(pydantic_object=schema)
@@ -1270,8 +1321,7 @@ class ChatSambaStudio(BaseChatModel):
     additional_headers: Dict[str, Any] = Field(default={})
     """Additional headers to send in request"""
 
-    class Config:
-        populate_by_name = True
+    model_config = ConfigDict(populate_by_name=True, protected_namespaces=())
 
     @classmethod
     def is_lc_serializable(cls) -> bool:
@@ -1380,10 +1430,9 @@ class ChatSambaStudio(BaseChatModel):
         self,
         schema: Optional[Union[Dict[str, Any], Type[BaseModel]]] = None,
         *,
-        method: Literal[
-            "function_calling", "json_mode", "json_schema"
-        ] = "function_calling",
+        method: Literal["function_calling", "json_mode", "json_schema"] = "json_schema",
         include_raw: bool = False,
+        strict: bool = False,
         **kwargs: Any,
     ) -> Runnable[LanguageModelInput, Union[Dict[str, Any], BaseModel]]:
         """Model wrapper that returns outputs formatted to match the given schema.
@@ -1409,7 +1458,7 @@ class ChatSambaStudio(BaseChatModel):
                 to an OpenAI function and the returned model will make use of the
                 function-calling API. If "json_mode" or "json_schema" then OpenAI's
                 JSON mode will be used.
-                Note that if using "json_mode" or "json_schema" then you must include instructions
+                Note that if using "json_mode" then you must include instructions
                 for formatting the output into the desired schema into the model call.
 
             include_raw:
@@ -1419,6 +1468,16 @@ class ChatSambaStudio(BaseChatModel):
                 response will be returned. If an error occurs during output parsing it
                 will be caught and returned as well. The final output is always a dict
                 with keys "raw", "parsed", and "parsing_error".
+
+            strict:
+                - True:
+                    Model output is guaranteed to exactly match the schema.
+                    The input schema will also be validated
+                - False:
+                    Input schema will not be validated and model output will not be
+                    validated.
+
+            kwargs: Additional keyword args aren't supported.
 
         Returns:
             A Runnable that takes same inputs as a :class:`langchain_core.language_models.chat.BaseChatModel`.
@@ -1614,7 +1673,6 @@ class ChatSambaStudio(BaseChatModel):
 
                 structured_llm.invoke(
                     "Answer the following question. "
-                    "Make sure to return a JSON blob with keys 'answer' and 'justification'.\n\n"
                     "What's heavier a pound of bricks or a pound of feathers?"
                 )
                 # -> {
@@ -1671,16 +1729,14 @@ class ChatSambaStudio(BaseChatModel):
                     "schema must be specified when method is not 'json_mode'. "
                     "Received None."
                 )
-            llm = self
-            # TODO bind response format when json schema available by API,
-            # update example
-            # llm = self.bind(
-            #   response_format={"type": "json_object", "json_schema": schema}
-            #   structured_output_format={
-            #     "kwargs": {"method": "json_schema"},
-            #     "schema": schema,
-            # },
-            # )
+            response_format = _convert_to_openai_response_format(schema, strict=strict)
+            llm = self.bind(
+                response_format=response_format,
+                structured_output_format={
+                    "kwargs": {"method": "json_schema", "strict": strict},
+                    "schema": convert_to_openai_tool(schema),
+                },
+            )
             if is_pydantic_schema:
                 schema = cast(Type[BaseModel], schema)
                 output_parser = PydanticOutputParser(pydantic_object=schema)
