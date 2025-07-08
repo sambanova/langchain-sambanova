@@ -1,7 +1,7 @@
 <a href="https://sambanova.ai/">
 <picture>
   <source media="(prefers-color-scheme: dark)" srcset="img/SambaNova-light-logo-1.png" height="100">
-  <img alt="SambaNova logo" src="https://sambanova.ai/hubfs/sambanova-logo-black.png" height="100">
+  <img alt="SambaNova logo" srcset="img/SambaNova-dark-logo-1.png" height="100">
 </picture>
 </a>
 
