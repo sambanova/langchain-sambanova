@@ -1,21 +1,14 @@
-from importlib import metadata
-
 from langchain_sambanova.chat_models import ChatSambaNovaCloud, ChatSambaStudio
 from langchain_sambanova.embeddings import (
     SambaNovaCloudEmbeddings,
     SambaStudioEmbeddings,
 )
-
-try:
-    __version__ = metadata.version(__package__)
-except metadata.PackageNotFoundError:
-    # Case where package metadata is not available.
-    __version__ = ""
-del metadata  # optional, avoids polluting the results of dir(__package__)
+from langchain_sambanova.version import __version__
 
 __all__ = [
     "ChatSambaNovaCloud",
     "ChatSambaStudio",
-    "SambaStudioEmbeddings",
     "SambaNovaCloudEmbeddings",
+    "SambaStudioEmbeddings",
+    "__version__",
 ]
