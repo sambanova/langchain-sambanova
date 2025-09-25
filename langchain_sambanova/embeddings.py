@@ -4,6 +4,7 @@ import urllib.parse
 from typing import Any, Dict, Generator, List, Optional
 
 import requests
+import warnings
 from langchain_core.embeddings import Embeddings
 from langchain_core.utils import convert_to_secret_str, get_from_dict_or_env
 from pydantic import BaseModel, ConfigDict, Field, SecretStr
@@ -83,6 +84,12 @@ class SambaNovaCloudEmbeddings(BaseModel, Embeddings):
         }
 
     def __init__(self, **kwargs: Any) -> None:
+        warnings.warn(
+            "SambaNovaCloudEmbeddings is deprecated and will be removed "
+            "in a future version. Use SambaNovaEmbeddings instead.",
+            DeprecationWarning,
+            stacklevel=2,
+        )
         """init and validate environment variables"""
         url = get_from_dict_or_env(
             kwargs,
@@ -306,6 +313,12 @@ class SambaStudioEmbeddings(BaseModel, Embeddings):
         }
 
     def __init__(self, **kwargs: Any) -> None:
+        warnings.warn(
+            "SambaNovaStudioEmbeddings is deprecated and will be removed "
+            "in a future version. Use SambaNovaEmbeddings instead.",
+            DeprecationWarning,
+            stacklevel=2,
+        )
         """init and validate environment variables"""
         url = get_from_dict_or_env(kwargs, "sambastudio_url", "SAMBASTUDIO_URL")
         if "api/v2/predict/generic" not in url and "api/predict/generic" not in url:
