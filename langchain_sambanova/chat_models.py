@@ -19,6 +19,7 @@ from typing import (
 )
 
 import requests
+import warnings
 from langchain_core.callbacks import (
     CallbackManagerForLLMRun,
 )
@@ -380,6 +381,12 @@ class ChatSambaNovaCloud(BaseChatModel):
         return "sambanovacloud-chatmodel"
 
     def __init__(self, **kwargs: Any) -> None:
+        warnings.warn(
+            "ChatSambaNovaCloud is deprecated and will be removed in a future version. "
+            "Use ChatSambaNova instead.",
+            DeprecationWarning,
+            stacklevel=2,
+        )
         """init and validate environment variables"""
         url = get_from_dict_or_env(
             kwargs,
@@ -1366,6 +1373,12 @@ class ChatSambaStudio(BaseChatModel):
         return "sambastudio-chatmodel"
 
     def __init__(self, **kwargs: Any) -> None:
+        warnings.warn(
+            "ChatSambaStudio is deprecated and will be removed in a future version. "
+            "Use ChatSambaNova instead.",
+            DeprecationWarning,
+            stacklevel=2,
+        )
         """init and validate environment variables"""
         url = get_from_dict_or_env(kwargs, "sambastudio_url", "SAMBASTUDIO_URL")
         if "api/v2/predict/generic" not in url and "api/predict/generic" not in url:
