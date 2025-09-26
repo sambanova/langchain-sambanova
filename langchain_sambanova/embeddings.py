@@ -1,10 +1,13 @@
 """SambaNova embedding models."""
 
+from __future__ import annotations
+
 import urllib.parse
-from typing import Any, Dict, Generator, List, Optional
+import warnings
+from collections.abc import Generator
+from typing import Any, Optional
 
 import requests
-import warnings
 from langchain_core.embeddings import Embeddings
 from langchain_core.utils import convert_to_secret_str, get_from_dict_or_env
 from pydantic import BaseModel, ConfigDict, Field, SecretStr
@@ -18,7 +21,7 @@ class SambaNovaCloudEmbeddings(BaseModel, Embeddings):
         `SAMBANOVA_API_KEY` set with your SambaNova cloud API Key.
         https://cloud.sambanova.ai/
 
-        Example:
+    Example:
 
         .. code-block:: python
 
@@ -50,10 +53,10 @@ class SambaNovaCloudEmbeddings(BaseModel, Embeddings):
     max_characters: int = Field(default=16384)
     """"max characters, longer will be trimmed"""
 
-    model_kwargs: Optional[Dict[str, Any]] = None
+    model_kwargs: Optional[dict[str, Any]] = None
     """Key word arguments to pass to the model."""
 
-    additional_headers: Dict[str, Any] = Field(default={})
+    additional_headers: dict[str, Any] = Field(default={})
     """Additional headers to send in request"""
 
     model_config = ConfigDict(populate_by_name=True, protected_namespaces=())
@@ -64,13 +67,13 @@ class SambaNovaCloudEmbeddings(BaseModel, Embeddings):
         return False
 
     @property
-    def lc_secrets(self) -> Dict[str, str]:
+    def lc_secrets(self) -> dict[str, str]:
         return {
             "sambanova_api_key": "sambanova_api_key",
         }
 
     @property
-    def _identifying_params(self) -> Dict[str, Any]:
+    def _identifying_params(self) -> dict[str, Any]:
         """Return a dictionary of identifying parameters.
 
         This information is used by the LangChain callback system, which
@@ -105,37 +108,37 @@ class SambaNovaCloudEmbeddings(BaseModel, Embeddings):
         )
         super().__init__(**kwargs)
 
-    def _iterate_over_batches(self, texts: List[str], batch_size: int) -> Generator:
-        """Generator for creating batches in the embed documents method
+    def _iterate_over_batches(self, texts: list[str], batch_size: int) -> Generator:
+        """Generator for creating batches in the embed documents method.
+
         Args:
             texts (List[str]): list of strings to embed
             batch_size (int, optional): batch size to be used for the embedding model.
             Will depend on the RDU endpoint used.
+
         Yields:
             List[str]: list (batch) of strings of size batch size
         """
         for i in range(0, len(texts), batch_size):
             yield texts[i : i + batch_size]
 
-    def _trim_documents(self, texts: List[str], max_size: int) -> List[str]:
-        """Trim text to a max number of characters
+    def _trim_documents(self, texts: list[str], max_size: int) -> list[str]:
+        """Trim each text to a maximum number of characters.
 
         Args:
-            texts (List[str]): lists of text documents
-            max_size (int): max amount of characters per tex document
+            texts (list[str]): List of text documents.
+            max_size (int): Maximum number of characters per text document.
 
         Returns:
-            List[str]: timed text documents list
+            list[str]: List of trimmed text documents.
         """
-        new_texts = []
-        for text in texts:
-            new_texts.append(text[:max_size])
-        return new_texts
+        return [text[:max_size] for text in texts]
 
     def embed_documents(
-        self, texts: List[str], batch_size: Optional[int] = None
-    ) -> List[List[float]]:
+        self, texts: list[str], batch_size: Optional[int] = None
+    ) -> list[list[float]]:
         """Returns a list of embeddings for the given sentences.
+
         Args:
             texts (`List[str]`): List of texts to encode
             batch_size (`int`): Batch size for the encoding
@@ -147,7 +150,7 @@ class SambaNovaCloudEmbeddings(BaseModel, Embeddings):
         if batch_size is None:
             batch_size = self.batch_size
         http_session = requests.Session()
-        params: Dict[str, Any] = {}
+        params: dict[str, Any] = {}
         embeddings = []
 
         texts = self._trim_documents(texts, self.max_characters)
@@ -169,32 +172,35 @@ class SambaNovaCloudEmbeddings(BaseModel, Embeddings):
                 json=data,
             )
             if response.status_code != 200:
-                raise RuntimeError(
+                msg = (
                     f"Sambanova /complete call failed with status code "
                     f"{response.status_code}.\n Details: {response.text}"
                 )
+                raise RuntimeError(msg)
             try:
                 embedding = [item["embedding"] for item in response.json()["data"]]
                 embeddings.extend(embedding)
-            except KeyError:
-                raise KeyError(
+            except KeyError as e:
+                msg = (
                     "'data' not found in endpoint response",
                     response.json(),
                 )
+                raise KeyError(msg) from e
 
         return embeddings
 
-    def embed_query(self, text: str) -> List[float]:
+    def embed_query(self, text: str) -> list[float]:
         """Returns a list of embeddings for the given sentences.
+
         Args:
-            sentences (`List[str]`): List of sentences to encode
+            text: (`str`) sentence to encode
 
         Returns:
-            `List[np.ndarray]` or `List[tensor]`: List of embeddings
-            for the given sentences
+            `List[float]: Embeddings
+            for the given sentence
         """
         http_session = requests.Session()
-        params: Dict[str, Any] = {}
+        params: dict[str, Any] = {}
 
         params = {"model": self.model, "dimensions": self.dimensions}
         if self.model_kwargs is not None:
@@ -213,17 +219,19 @@ class SambaNovaCloudEmbeddings(BaseModel, Embeddings):
             json=data,
         )
         if response.status_code != 200:
-            raise RuntimeError(
+            msg = (
                 f"Sambanova /complete call failed with status code "
                 f"{response.status_code}.\n Details: {response.text}"
             )
+            raise RuntimeError(msg)
         try:
             embedding = response.json()["data"][0]["embedding"]
-        except KeyError:
-            raise KeyError(
+        except KeyError as e:
+            msg = (
                 "'data' not found in endpoint response",
                 response.json(),
             )
+            raise KeyError(msg) from e
 
         return embedding
 
@@ -237,7 +245,7 @@ class SambaStudioEmbeddings(BaseModel, Embeddings):
         `SAMBASTUDIO_API_KEY` set with your SambaStudio deployed endpoint API Key.
         https://docs.sambanova.ai/sambastudio/latest/index.html
 
-        Example:
+    Example:
 
         .. code-block:: python
 
@@ -279,10 +287,10 @@ class SambaStudioEmbeddings(BaseModel, Embeddings):
     max_characters: int = Field(default=16384)
     """"max characters, longer will be trimmed"""
 
-    model_kwargs: Optional[Dict[str, Any]] = None
+    model_kwargs: Optional[dict[str, Any]] = None
     """Key word arguments to pass to the model."""
 
-    additional_headers: Dict[str, Any] = Field(default={})
+    additional_headers: dict[str, Any] = Field(default={})
     """Additional headers to send in request"""
 
     model_config = ConfigDict(populate_by_name=True, protected_namespaces=())
@@ -293,14 +301,14 @@ class SambaStudioEmbeddings(BaseModel, Embeddings):
         return True
 
     @property
-    def lc_secrets(self) -> Dict[str, str]:
+    def lc_secrets(self) -> dict[str, str]:
         return {
             "sambastudio_url": "sambastudio_url",
             "sambastudio_api_key": "sambastudio_api_key",
         }
 
     @property
-    def _identifying_params(self) -> Dict[str, Any]:
+    def _identifying_params(self) -> dict[str, Any]:
         """Return a dictionary of identifying parameters.
 
         This information is used by the LangChain callback system, which
@@ -334,37 +342,37 @@ class SambaStudioEmbeddings(BaseModel, Embeddings):
         )
         super().__init__(**kwargs)
 
-    def _iterate_over_batches(self, texts: List[str], batch_size: int) -> Generator:
-        """Generator for creating batches in the embed documents method
+    def _iterate_over_batches(self, texts: list[str], batch_size: int) -> Generator:
+        """Generator for creating batches in the embed documents method.
+
         Args:
             texts (List[str]): list of strings to embed
             batch_size (int, optional): batch size to be used for the embedding model.
             Will depend on the RDU endpoint used.
+
         Yields:
             List[str]: list (batch) of strings of size batch size
         """
         for i in range(0, len(texts), batch_size):
             yield texts[i : i + batch_size]
 
-    def _trim_documents(self, texts: List[str], max_size: int) -> List[str]:
-        """Trim text to a max number of characters
+    def _trim_documents(self, texts: list[str], max_size: int) -> list[str]:
+        """Trim each text to a maximum number of characters.
 
         Args:
-            texts (List[str]): lists of text documents
-            max_size (int): max amount of characters per tex document
+            texts (list[str]): List of text documents.
+            max_size (int): Maximum number of characters per text document.
 
         Returns:
-            List[str]: timed text documents list
+            list[str]: List of trimmed text documents.
         """
-        new_texts = []
-        for text in texts:
-            new_texts.append(text[:max_size])
-        return new_texts
+        return [text[:max_size] for text in texts]
 
     def embed_documents(
-        self, texts: List[str], batch_size: Optional[int] = None
-    ) -> List[List[float]]:
+        self, texts: list[str], batch_size: Optional[int] = None
+    ) -> list[list[float]]:
         """Returns a list of embeddings for the given sentences.
+
         Args:
             texts (`List[str]`): List of texts to encode
             batch_size (`int`): Batch size for the encoding
@@ -376,7 +384,7 @@ class SambaStudioEmbeddings(BaseModel, Embeddings):
         if batch_size is None:
             batch_size = self.batch_size
         http_session = requests.Session()
-        params: Dict[str, Any] = {}
+        params: dict[str, Any] = {}
         embeddings = []
 
         texts = self._trim_documents(texts, self.max_characters)
@@ -402,18 +410,20 @@ class SambaStudioEmbeddings(BaseModel, Embeddings):
                     json=data,
                 )
                 if response.status_code != 200:
-                    raise RuntimeError(
+                    msg = (
                         f"Sambanova /complete call failed with status code "
                         f"{response.status_code}.\n Details: {response.text}"
                     )
+                    raise RuntimeError(msg)
                 try:
                     embedding = [item["value"] for item in response.json()["items"]]
                     embeddings.extend(embedding)
-                except KeyError:
-                    raise KeyError(
+                except KeyError as e:
+                    msg = (
                         "'items' not found in endpoint response",
                         response.json(),
                     )
+                    raise KeyError(msg) from e
 
         elif "api/predict/generic" in self.sambastudio_url:
             for batch in self._iterate_over_batches(texts, batch_size):
@@ -435,18 +445,20 @@ class SambaStudioEmbeddings(BaseModel, Embeddings):
                     json=data,
                 )
                 if response.status_code != 200:
-                    raise RuntimeError(
+                    msg = (
                         f"Sambanova /complete call failed with status code "
                         f"{response.status_code}.\n Details: {response.text}"
                     )
+                    raise RuntimeError(msg)
                 try:
                     embedding = response.json()["predictions"]
                     embeddings.extend(embedding)
-                except KeyError:
-                    raise KeyError(
+                except KeyError as e:
+                    msg = (
                         "'predictions' not found in endpoint response",
                         response.json(),
                     )
+                    raise KeyError(msg) from e
 
         elif "/embeddings" in self.sambastudio_url:
             for batch in self._iterate_over_batches(texts, batch_size):
@@ -469,38 +481,41 @@ class SambaStudioEmbeddings(BaseModel, Embeddings):
                     json=data,
                 )
                 if response.status_code != 200:
-                    raise RuntimeError(
+                    msg = (
                         f"Sambanova /complete call failed with status code "
                         f"{response.status_code}.\n Details: {response.text}"
                     )
+                    raise RuntimeError(msg)
                 try:
                     embedding = [item["embedding"] for item in response.json()["data"]]
                     embeddings.extend(embedding)
-                except KeyError:
-                    raise KeyError(
+                except KeyError as e:
+                    msg = (
                         "'data' not found in endpoint response",
                         response.json(),
                     )
+                    raise KeyError(msg) from e
 
         else:
-            raise ValueError(
+            msg = (
                 f"Unsupported URL {self.sambastudio_url} "
                 "only v1/embeddings, generic v1 and generic v2 APIs are supported"
             )
+            raise ValueError(msg)
 
         return embeddings
 
-    def embed_query(self, text: str) -> List[float]:
+    def embed_query(self, text: str) -> list[float]:
         """Returns a list of embeddings for the given sentences.
+
         Args:
-            sentences (`List[str]`): List of sentences to encode
+            text (`str`): Sentence to encode
 
         Returns:
-            `List[np.ndarray]` or `List[tensor]`: List of embeddings
-            for the given sentences
+            `List[float]`: embeddings for the given sentences
         """
         http_session = requests.Session()
-        params: Dict[str, Any] = {}
+        params: dict[str, Any] = {}
 
         text = self._trim_documents([text], self.max_characters)[0]
 
@@ -518,17 +533,19 @@ class SambaStudioEmbeddings(BaseModel, Embeddings):
                 json=data,
             )
             if response.status_code != 200:
-                raise RuntimeError(
+                msg = (
                     f"Sambanova /complete call failed with status code "
                     f"{response.status_code}.\n Details: {response.text}"
                 )
+                raise RuntimeError(msg)
             try:
                 embedding = response.json()["items"][0]["value"]
-            except KeyError:
-                raise KeyError(
+            except KeyError as e:
+                msg = (
                     "'items' not found in endpoint response",
                     response.json(),
                 )
+                raise KeyError(msg) from e
 
         elif "api/predict/generic" in self.sambastudio_url:
             params = {"select_expert": self.model}
@@ -549,17 +566,19 @@ class SambaStudioEmbeddings(BaseModel, Embeddings):
                 json=data,
             )
             if response.status_code != 200:
-                raise RuntimeError(
+                msg = (
                     f"Sambanova /complete call failed with status code "
                     f"{response.status_code}.\n Details: {response.text}"
                 )
+                raise RuntimeError(msg)
             try:
                 embedding = response.json()["predictions"][0]
-            except KeyError:
-                raise KeyError(
+            except KeyError as e:
+                msg = (
                     "'predictions' not found in endpoint response",
                     response.json(),
                 )
+                raise KeyError(msg) from e
 
         elif "/embeddings" in self.sambastudio_url:
             params = {"model": self.model, "dimensions": self.dimensions}
@@ -580,22 +599,25 @@ class SambaStudioEmbeddings(BaseModel, Embeddings):
                 json=data,
             )
             if response.status_code != 200:
-                raise RuntimeError(
+                msg = (
                     f"Sambanova /complete call failed with status code "
                     f"{response.status_code}.\n Details: {response.text}"
                 )
+                raise RuntimeError(msg)
             try:
                 embedding = response.json()["data"][0]["embedding"]
-            except KeyError:
-                raise KeyError(
+            except KeyError as e:
+                msg = (
                     "'data' not found in endpoint response",
                     response.json(),
                 )
+                raise KeyError(msg) from e
 
         else:
-            raise ValueError(
+            msg = (
                 f"Unsupported URL {self.sambastudio_url}"
                 "only v1/embeddings, generic v1 and generic v2 APIs are supported"
             )
+            raise ValueError(msg)
 
         return embedding
