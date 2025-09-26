@@ -1,25 +1,22 @@
 """SambaNova chat models."""
 
+from __future__ import annotations
+
 import json
 import urllib.parse
+import warnings
+from collections.abc import Iterator, Sequence
 from operator import itemgetter
 from typing import (
     Any,
     Callable,
-    Dict,
-    Iterator,
-    List,
     Literal,
     Optional,
-    Sequence,
-    Tuple,
-    Type,
     Union,
     cast,
 )
 
 import requests
-import warnings
 from langchain_core.callbacks import (
     CallbackManagerForLLMRun,
 )
@@ -70,9 +67,8 @@ from pydantic import BaseModel, ConfigDict, Field, SecretStr
 from requests import Response
 
 
-def _convert_message_to_dict(message: BaseMessage) -> Dict[str, Any]:
-    """
-    convert a BaseMessage to a dictionary with Role / content
+def _convert_message_to_dict(message: BaseMessage) -> dict[str, Any]:
+    """Convert a BaseMessage to a dictionary with Role / content.
 
     Args:
         message: BaseMessage
@@ -80,7 +76,7 @@ def _convert_message_to_dict(message: BaseMessage) -> Dict[str, Any]:
     Returns:
         messages_dict:  role / content dict
     """
-    message_dict: Dict[str, Any] = {}
+    message_dict: dict[str, Any] = {}
     if isinstance(message, ChatMessage):
         message_dict = {"role": message.role, "content": message.content}
     elif isinstance(message, SystemMessage):
@@ -100,13 +96,13 @@ def _convert_message_to_dict(message: BaseMessage) -> Dict[str, Any]:
             "tool_call_id": message.tool_call_id,
         }
     else:
-        raise TypeError(f"Got unknown type {message}")
+        msg = f"Got unknown type {message}"
+        raise TypeError(msg)
     return message_dict
 
 
-def _create_message_dicts(messages: List[BaseMessage]) -> List[Dict[str, Any]]:
-    """
-    Convert a list of BaseMessages to a list of dictionaries with Role / content
+def _create_message_dicts(messages: list[BaseMessage]) -> list[dict[str, Any]]:
+    """Convert a list of BaseMessages to a list of dictionaries with Role / content.
 
     Args:
         messages: list of BaseMessages
@@ -114,8 +110,7 @@ def _create_message_dicts(messages: List[BaseMessage]) -> List[Dict[str, Any]]:
     Returns:
         messages_dicts:  list of role / content dicts
     """
-    message_dicts = [_convert_message_to_dict(m) for m in messages]
-    return message_dicts
+    return [_convert_message_to_dict(m) for m in messages]
 
 
 def _is_pydantic_class(obj: Any) -> bool:
@@ -163,15 +158,15 @@ def _convert_to_openai_response_format(
 
 
 class ChatSambaNovaCloud(BaseChatModel):
-    """
-    SambaNova Cloud chat model.
+    r"""SambaNova Cloud chat model.
 
     Setup:
         To use, you should have the environment variables:
         `SAMBANOVA_URL` set with your SambaNova Cloud URL.
         `SAMBANOVA_API_KEY` set with your SambaNova Cloud API Key.
         http://cloud.sambanova.ai/
-        Example:
+
+    Example:
         .. code-block:: python
             ChatSambaNovaCloud(
                 sambanova_url = SambaNova cloud endpoint URL,
@@ -248,13 +243,12 @@ class ChatSambaNovaCloud(BaseChatModel):
 
             from pydantic import BaseModel, Field
 
+
             class GetWeather(BaseModel):
                 '''Get the current weather in a given location'''
 
-                location: str = Field(
-                    ...,
-                    description="The city and state, e.g. Los Angeles, CA"
-                )
+                location: str = Field(..., description="The city and state, e.g. Los Angeles, CA")
+
 
             llm_with_tools = llm.bind_tools([GetWeather, GetPopulation])
             ai_msg = llm_with_tools.invoke("Should I bring my umbrella today in LA?")
@@ -277,19 +271,20 @@ class ChatSambaNovaCloud(BaseChatModel):
 
             from pydantic import BaseModel, Field
 
+
             class Joke(BaseModel):
                 '''Joke to tell user.'''
 
                 setup: str = Field(description="The setup of the joke")
                 punchline: str = Field(description="The punchline to the joke")
 
+
             structured_model = llm.with_structured_output(Joke)
             structured_model.invoke("Tell me a joke about cats")
 
         .. code-block:: python
 
-            Joke(setup="Why did the cat join a band?",
-            punchline="Because it wanted to be the purr-cussionist!")
+            Joke(setup="Why did the cat join a band?", punchline="Because it wanted to be the purr-cussionist!")
 
         See `ChatSambanovaCloud.with_structured_output()` for more.
 
@@ -333,13 +328,13 @@ class ChatSambaNovaCloud(BaseChatModel):
     top_p: Optional[float] = Field(default=None)
     """model top p"""
 
-    stream_options: Dict[str, Any] = Field(default={"include_usage": True})
+    stream_options: dict[str, Any] = Field(default={"include_usage": True})
     """stream options, include usage to get generation metrics"""
 
-    additional_headers: Dict[str, Any] = Field(default={})
+    additional_headers: dict[str, Any] = Field(default={})
     """Additional headers to sent in request"""
 
-    model_kwargs: Dict[str, Any] = Field(default_factory=dict)
+    model_kwargs: dict[str, Any] = Field(default_factory=dict)
     """Key word arguments to pass to the model."""
 
     model_config = ConfigDict(populate_by_name=True, protected_namespaces=())
@@ -350,16 +345,16 @@ class ChatSambaNovaCloud(BaseChatModel):
         return True
 
     @classmethod
-    def get_lc_namespace(cls) -> List[str]:
+    def get_lc_namespace(cls) -> list[str]:
         """Get the namespace of the langchain object."""
         return ["langchain_sambanova", "chat_models"]
 
     @property
-    def lc_secrets(self) -> Dict[str, str]:
+    def lc_secrets(self) -> dict[str, str]:
         return {"sambanova_api_key": "sambanova_api_key"}
 
     @property
-    def _identifying_params(self) -> Dict[str, Any]:
+    def _identifying_params(self) -> dict[str, Any]:
         """Return a dictionary of identifying parameters.
 
         This information is used by the LangChain callback system, which
@@ -404,18 +399,17 @@ class ChatSambaNovaCloud(BaseChatModel):
 
     def bind_tools(
         self,
-        tools: Sequence[Union[Dict[str, Any], Type[Any], Callable[..., Any], BaseTool]],
+        tools: Sequence[Union[dict[str, Any], type[Any], Callable[..., Any], BaseTool]],
         *,
-        tool_choice: Optional[Union[Dict[str, Any], bool, str]] = None,
+        tool_choice: Optional[Union[dict[str, Any], bool, str]] = None,
         parallel_tool_calls: Optional[bool] = False,
         **kwargs: Any,
     ) -> Runnable[LanguageModelInput, BaseMessage]:
-        """Bind tool-like objects to this chat model
+        """Bind tool-like objects to this chat model.
 
         tool_choice: does not currently support "any", choice like
         should be one of ["auto", "none", "required"]
         """
-
         formatted_tools = [convert_to_openai_tool(tool) for tool in tools]
 
         if tool_choice:
@@ -427,14 +421,14 @@ class ChatSambaNovaCloud(BaseChatModel):
                 if tool_choice:
                     tool_choice = "required"
             elif isinstance(tool_choice, dict):
-                raise ValueError(
-                    "tool_choice must be one of ['auto', 'none', 'required']"
-                )
+                msg = "tool_choice must be one of ['auto', 'none', 'required']"
+                raise ValueError(msg)
             else:
-                raise ValueError(
-                    f"Unrecognized tool_choice type. Expected str, bool"
+                msg = (
+                    "Unrecognized tool_choice type. Expected str, bool"
                     f"Received: {tool_choice}"
                 )
+                raise ValueError(msg)
         else:
             tool_choice = "auto"
         kwargs["tool_choice"] = tool_choice
@@ -443,14 +437,14 @@ class ChatSambaNovaCloud(BaseChatModel):
 
     def with_structured_output(
         self,
-        schema: Optional[Union[Dict[str, Any], Type[BaseModel]]] = None,
+        schema: Optional[Union[dict[str, Any], type[BaseModel]]] = None,
         *,
         method: Literal["function_calling", "json_mode", "json_schema"] = "json_schema",
         include_raw: bool = False,
         strict: bool = False,
         **kwargs: Any,
-    ) -> Runnable[LanguageModelInput, Union[Dict[str, Any], BaseModel]]:
-        """Model wrapper that returns outputs formatted to match the given schema.
+    ) -> Runnable[LanguageModelInput, Union[dict[str, Any], BaseModel]]:
+        r"""Model wrapper that returns outputs formatted to match the given schema.
 
         Args:
             schema:
@@ -520,17 +514,13 @@ class ChatSambaNovaCloud(BaseChatModel):
                     '''An answer to the user question along with justification for the answer.'''
 
                     answer: str
-                    justification: str = Field(
-                        description="A justification for the answer."
-                    )
+                    justification: str = Field(description="A justification for the answer.")
 
 
                 llm = ChatSambaNovaCloud(model="Meta-Llama-3.3-70B-Instruct", temperature=0)
                 structured_llm = llm.with_structured_output(AnswerWithJustification)
 
-                structured_llm.invoke(
-                    "What weighs more a pound of bricks or a pound of feathers"
-                )
+                structured_llm.invoke("What weighs more a pound of bricks or a pound of feathers")
 
                 # -> AnswerWithJustification(
                 #     answer='They weigh the same',
@@ -552,13 +542,9 @@ class ChatSambaNovaCloud(BaseChatModel):
 
 
                 llm = ChatSambaNovaCloud(model="Meta-Llama-3.3-70B-Instruct", temperature=0)
-                structured_llm = llm.with_structured_output(
-                    AnswerWithJustification, include_raw=True
-                )
+                structured_llm = llm.with_structured_output(AnswerWithJustification, include_raw=True)
 
-                structured_llm.invoke(
-                    "What weighs more a pound of bricks or a pound of feathers"
-                )
+                structured_llm.invoke("What weighs more a pound of bricks or a pound of feathers")
                 # -> {
                 #     'raw': AIMessage(content='', additional_kwargs={'tool_calls': [{'function': {'arguments': '{"answer": "They weigh the same.", "justification": "A pound is a unit of weight or mass, so one pound of bricks and one pound of feathers both weigh the same amount."}', 'name': 'AnswerWithJustification'}, 'id': 'call_17a431fc6a4240e1bd', 'type': 'function'}]}, response_metadata={'finish_reason': 'tool_calls', 'usage': {'acceptance_rate': 5, 'completion_tokens': 53, 'completion_tokens_after_first_per_sec': 343.7964936837758, 'completion_tokens_after_first_per_sec_first_ten': 439.1205661878638, 'completion_tokens_per_sec': 162.8511306784833, 'end_time': 1731527851.0698032, 'is_last_response': True, 'prompt_tokens': 213, 'start_time': 1731527850.7137961, 'time_to_first_token': 0.20475482940673828, 'total_latency': 0.32545061111450196, 'total_tokens': 266, 'total_tokens_per_sec': 817.3283162354066}, 'model_name': 'Meta-Llama-3.3-70B-Instruct', 'system_fingerprint': 'fastcoe', 'created': 1731527850}, id='95667eaf-447f-4b53-bb6e-b6e1094ded88', tool_calls=[{'name': 'AnswerWithJustification', 'args': {'answer': 'They weigh the same.', 'justification': 'A pound is a unit of weight or mass, so one pound of bricks and one pound of feathers both weigh the same amount.'}, 'id': 'call_17a431fc6a4240e1bd', 'type': 'tool_call'}]),
                 #     'parsed': AnswerWithJustification(answer='They weigh the same.', justification='A pound is a unit of weight or mass, so one pound of bricks and one pound of feathers both weigh the same amount.'),
@@ -579,17 +565,13 @@ class ChatSambaNovaCloud(BaseChatModel):
                     '''An answer to the user question along with justification for the answer.'''
 
                     answer: str
-                    justification: Annotated[
-                        Optional[str], None, "A justification for the answer."
-                    ]
+                    justification: Annotated[Optional[str], None, "A justification for the answer."]
 
 
                 llm = ChatSambaNovaCloud(model="Meta-Llama-3.3-70B-Instruct", temperature=0)
                 structured_llm = llm.with_structured_output(AnswerWithJustification)
 
-                structured_llm.invoke(
-                    "What weighs more a pound of bricks or a pound of feathers"
-                )
+                structured_llm.invoke("What weighs more a pound of bricks or a pound of feathers")
                 # -> {
                 #     'answer': 'They weigh the same',
                 #     'justification': 'A pound is a unit of weight or mass, so one pound of bricks and one pound of feathers both weigh the same amount.'
@@ -601,24 +583,22 @@ class ChatSambaNovaCloud(BaseChatModel):
                 from langchain_sambanova import ChatSambaNovaCloud
 
                 oai_schema = {
-                    'name': 'AnswerWithJustification',
-                    'description': 'An answer to the user question along with justification for the answer.',
-                    'parameters': {
-                        'type': 'object',
-                        'properties': {
-                            'answer': {'type': 'string'},
-                            'justification': {'description': 'A justification for the answer.', 'type': 'string'}
+                    "name": "AnswerWithJustification",
+                    "description": "An answer to the user question along with justification for the answer.",
+                    "parameters": {
+                        "type": "object",
+                        "properties": {
+                            "answer": {"type": "string"},
+                            "justification": {"description": "A justification for the answer.", "type": "string"},
                         },
-                       'required': ['answer']
-                   }
+                        "required": ["answer"],
+                    },
                 }
 
                 llm = ChatSambaNovaCloud(model="Meta-Llama-3.3-70B-Instruct", temperature=0)
                 structured_llm = llm.with_structured_output(oai_schema)
 
-                structured_llm.invoke(
-                    "What weighs more a pound of bricks or a pound of feathers"
-                )
+                structured_llm.invoke("What weighs more a pound of bricks or a pound of feathers")
                 # -> {
                 #     'answer': 'They weigh the same',
                 #     'justification': 'A pound is a unit of weight or mass, so one pound of bricks and one pound of feathers both weigh the same amount.'
@@ -698,14 +678,16 @@ class ChatSambaNovaCloud(BaseChatModel):
 
         """  # noqa: E501
         if kwargs:
-            raise ValueError(f"Received unsupported arguments {kwargs}")
+            msg = f"Received unsupported arguments {kwargs}"
+            raise ValueError(msg)
         is_pydantic_schema = _is_pydantic_class(schema)
         if method == "function_calling":
             if schema is None:
-                raise ValueError(
+                msg = (
                     "`schema` must be specified when method is `function_calling`."
                     " Received None."
                 )
+                raise ValueError(msg)
             tool_name = convert_to_openai_tool(schema)["function"]["name"]
             llm = self.bind_tools(
                 [schema],
@@ -733,17 +715,18 @@ class ChatSambaNovaCloud(BaseChatModel):
                 },
             )
             if is_pydantic_schema:
-                schema = cast(Type[BaseModel], schema)
+                schema = cast(type[BaseModel], schema)
                 output_parser = PydanticOutputParser(pydantic_object=schema)
             else:
                 output_parser = JsonOutputParser()
 
         elif method == "json_schema":
             if schema is None:
-                raise ValueError(
+                msg = (
                     "`schema` must be specified when method is not `json_mode`."
                     " Received None."
                 )
+                raise ValueError(msg)
             response_format = _convert_to_openai_response_format(schema, strict=strict)
             llm = self.bind(
                 response_format=response_format,
@@ -753,15 +736,16 @@ class ChatSambaNovaCloud(BaseChatModel):
                 },
             )
             if is_pydantic_schema:
-                schema = cast(Type[BaseModel], schema)
+                schema = cast(type[BaseModel], schema)
                 output_parser = PydanticOutputParser(pydantic_object=schema)
             else:
                 output_parser = JsonOutputParser()
         else:
-            raise ValueError(
+            msg = (
                 f"Unrecognized method argument. Expected one of `function_calling` or "
                 f"`json_mode`. Received: `{method}`"
             )
+            raise ValueError(msg)
 
         if include_raw:
             parser_assign = RunnablePassthrough.assign(
@@ -777,18 +761,19 @@ class ChatSambaNovaCloud(BaseChatModel):
 
     def _handle_request(
         self,
-        messages_dicts: List[Dict[str, Any]],
-        stop: Optional[List[str]] = None,
-        streaming: bool = False,
+        messages_dicts: list[dict[str, Any]],
+        stop: Optional[list[str]] = None,
+        *,
+        streaming: Optional[bool] = False,
         **kwargs: Any,
     ) -> Response:
-        """
-        Performs a post request to the LLM API.
+        """Performs a post request to the LLM API.
 
         Args:
             messages_dicts: List of role / content dicts to use as input.
             stop: list of stop tokens
             streaming: wether to do a streaming call
+            **kwargs: Additional parameters passed to the underlying API client.
 
         Returns:
             An iterator of response dicts.
@@ -818,7 +803,7 @@ class ChatSambaNovaCloud(BaseChatModel):
                 **self.model_kwargs,
             }
         http_session = requests.Session()
-        assert self.sambanova_api_key is not None
+        assert self.sambanova_api_key is not None  # noqa: S101
         response = http_session.post(
             self.sambanova_url,
             headers={
@@ -830,40 +815,42 @@ class ChatSambaNovaCloud(BaseChatModel):
             stream=streaming,
         )
         if response.status_code != 200:
-            raise RuntimeError(
+            msg = (
                 f"Sambanova /complete call failed with status code "
                 f"{response.status_code}.",
                 f"{response.text}.",
             )
+            raise RuntimeError(msg)
         return response
 
     def _process_response(self, response: Response) -> AIMessage:
-        """
-        Process a non streaming response from the api
+        """Process a non streaming response from the api.
 
         Args:
             response: A request Response object
 
-        Returns
+        Returns:
             generation: an AIMessage with model generation
         """
         try:
             response_dict = response.json()
             if response_dict.get("error"):
-                raise RuntimeError(
+                msg = (
                     f"Sambanova /complete call failed with status code "
                     f"{response.status_code}.",
                     f"{response_dict}.",
                 )
+                raise RuntimeError(msg)
         except Exception as e:
-            raise RuntimeError(
+            msg = (
                 f"Sambanova /complete call failed couldn't get JSON response {e}"
                 f"response: {response.text}"
             )
+            raise RuntimeError(msg) from e
         content = response_dict["choices"][0]["message"].get("content", "")
         if content is None:
             content = ""
-        additional_kwargs: Dict[str, Any] = {}
+        additional_kwargs: dict[str, Any] = {}
         tool_calls = []
         invalid_tool_calls = []
         raw_tool_calls = response_dict["choices"][0]["message"].get("tool_calls")
@@ -890,7 +877,7 @@ class ChatSambaNovaCloud(BaseChatModel):
             }
         else:
             usage_metadata = None
-        message = AIMessage(
+        return AIMessage(
             content=content,
             additional_kwargs=additional_kwargs,
             tool_calls=tool_calls,
@@ -905,13 +892,11 @@ class ChatSambaNovaCloud(BaseChatModel):
             usage_metadata=usage_metadata,
             id=response_dict["id"],
         )
-        return message
 
     def _process_stream_response(
         self, response: Response
     ) -> Iterator[BaseMessageChunk]:
-        """
-        Process a streaming response from the api
+        """Process a streaming response from the api.
 
         Args:
             response: An iterable request Response object
@@ -921,21 +906,23 @@ class ChatSambaNovaCloud(BaseChatModel):
         """
         try:
             import sseclient
-        except ImportError:
-            raise ImportError(
+        except ImportError as e:
+            msg = (
                 "could not import sseclient library"
                 "Please install it with `pip install sseclient-py`."
             )
+            raise ImportError(msg) from e
 
         client = sseclient.SSEClient(response)  # type: ignore
 
         for event in client.events():
             if event.event == "error_event":
-                raise RuntimeError(
+                msg = (
                     f"Sambanova /complete call failed with status code "
                     f"{response.status_code}."
                     f"{event.data}."
                 )
+                raise RuntimeError(msg)
 
             try:
                 # check if the response is a final event
@@ -944,17 +931,19 @@ class ChatSambaNovaCloud(BaseChatModel):
                     if isinstance(event.data, str):
                         data = json.loads(event.data)
                     else:
-                        raise RuntimeError(
+                        msg = (
                             f"Sambanova /complete call failed with status code "
                             f"{response.status_code}."
                             f"{event.data}."
                         )
+                        raise RuntimeError(msg)
                     if data.get("error"):
-                        raise RuntimeError(
+                        msg = (
                             f"Sambanova /complete call failed with status code "
                             f"{response.status_code}."
                             f"{event.data}."
                         )
+                        raise RuntimeError(msg)
                     metadata = {}
                     usage_metadata: Optional[UsageMetadata] = None
                     tool_calls = []
@@ -968,7 +957,7 @@ class ChatSambaNovaCloud(BaseChatModel):
                         content = data["choices"][0]["delta"].get("content", "")
                         if content is None:
                             content = ""
-                        id = data["id"]
+                        response_id = data["id"]
                         raw_tool_calls = data["choices"][0]["delta"].get("tool_calls")
                         if raw_tool_calls:
                             additional_kwargs["tool_calls"] = raw_tool_calls
@@ -989,7 +978,7 @@ class ChatSambaNovaCloud(BaseChatModel):
                                     )
                     else:
                         content = ""
-                        id = data["id"]
+                        response_id = data["id"]
                         metadata = {
                             "finish_reason": finish_reason
                             or data["choices"][0].get("finish_reason"),
@@ -1014,7 +1003,7 @@ class ChatSambaNovaCloud(BaseChatModel):
                         usage_metadata = None
                     chunk = AIMessageChunk(
                         content=content,
-                        id=id,
+                        id=response_id,
                         tool_calls=tool_calls,  # type: ignore
                         invalid_tool_calls=invalid_tool_calls,
                         additional_kwargs=additional_kwargs,
@@ -1024,20 +1013,20 @@ class ChatSambaNovaCloud(BaseChatModel):
                     yield chunk
 
             except Exception as e:
-                raise RuntimeError(
+                msg = (
                     f"Error getting content chunk raw streamed response: {e}"
                     f"data: {event.data}"
                 )
+                raise RuntimeError(msg) from e
 
     def _generate(
         self,
-        messages: List[BaseMessage],
-        stop: Optional[List[str]] = None,
+        messages: list[BaseMessage],
+        stop: Optional[list[str]] = None,
         run_manager: Optional[CallbackManagerForLLMRun] = None,
         **kwargs: Any,
     ) -> ChatResult:
-        """
-        Call SambaNovaCloud models.
+        """Call SambaNovaCloud models.
 
         Args:
             messages: the prompt composed of a list of messages.
@@ -1048,6 +1037,7 @@ class ChatSambaNovaCloud(BaseChatModel):
                   it makes it much easier to parse the output of the model
                   downstream and understand why generation stopped.
             run_manager: A run manager with callbacks for the LLM.
+            kwargs: Additional args to pass in generation.
 
         Returns:
             result: ChatResult with model generation
@@ -1071,13 +1061,12 @@ class ChatSambaNovaCloud(BaseChatModel):
 
     def _stream(
         self,
-        messages: List[BaseMessage],
-        stop: Optional[List[str]] = None,
+        messages: list[BaseMessage],
+        stop: Optional[list[str]] = None,
         run_manager: Optional[CallbackManagerForLLMRun] = None,
         **kwargs: Any,
     ) -> Iterator[ChatGenerationChunk]:
-        """
-        Stream the output of the SambaNovaCloud chat model.
+        """Stream the output of the SambaNovaCloud chat model.
 
         Args:
             messages: the prompt composed of a list of messages.
@@ -1088,6 +1077,7 @@ class ChatSambaNovaCloud(BaseChatModel):
                   it makes it much easier to parse the output of the model
                   downstream and understand why generation stopped.
             run_manager: A run manager with callbacks for the LLM.
+            kwargs: Additional args to pass in generation.
 
         Yields:
             chunk: ChatGenerationChunk with model partial generation
@@ -1102,8 +1092,7 @@ class ChatSambaNovaCloud(BaseChatModel):
 
 
 class ChatSambaStudio(BaseChatModel):
-    """
-    SambaStudio chat model.
+    """SambaStudio chat model.
 
     Setup:
         To use, you should have the environment variables:
@@ -1210,13 +1199,12 @@ class ChatSambaStudio(BaseChatModel):
 
             from pydantic import BaseModel, Field
 
+
             class GetWeather(BaseModel):
                 '''Get the current weather in a given location'''
 
-                location: str = Field(
-                    ...,
-                    description="The city and state, e.g. Los Angeles, CA"
-                )
+                location: str = Field(..., description="The city and state, e.g. Los Angeles, CA")
+
 
             llm_with_tools = llm.bind_tools([GetWeather, GetPopulation])
             ai_msg = llm_with_tools.invoke("Should I bring my umbrella today in LA?")
@@ -1224,13 +1212,7 @@ class ChatSambaStudio(BaseChatModel):
 
         .. code-block:: python
 
-            [
-                {
-                    'name': 'GetWeather',
-                    'args': {'location': 'Los Angeles, CA'},
-                    'id': 'call_adf61180ea2b4d228a'
-                }
-            ]
+            [{"name": "GetWeather", "args": {"location": "Los Angeles, CA"}, "id": "call_adf61180ea2b4d228a"}]
 
     Structured output:
         .. code-block:: python
@@ -1239,19 +1221,20 @@ class ChatSambaStudio(BaseChatModel):
 
             from pydantic import BaseModel, Field
 
+
             class Joke(BaseModel):
                 '''Joke to tell user.'''
 
                 setup: str = Field(description="The setup of the joke")
                 punchline: str = Field(description="The punchline to the joke")
 
+
             structured_model = llm.with_structured_output(Joke)
             structured_model.invoke("Tell me a joke about cats")
 
         .. code-block:: python
 
-            Joke(setup="Why did the cat join a band?",
-            punchline="Because it wanted to be the purr-cussionist!")
+            Joke(setup="Why did the cat join a band?", punchline="Because it wanted to be the purr-cussionist!")
 
         See `ChatSambaStudio.with_structured_output()` for more.
 
@@ -1306,10 +1289,10 @@ class ChatSambaStudio(BaseChatModel):
     process_prompt: Optional[bool] = Field(default=True)
     """whether process prompt (for Bundle generic v1 and v2 endpoints)"""
 
-    stream_options: Dict[str, Any] = Field(default={"include_usage": True})
+    stream_options: dict[str, Any] = Field(default={"include_usage": True})
     """stream options, include usage to get generation metrics"""
 
-    special_tokens: Dict[str, Any] = Field(
+    special_tokens: dict[str, Any] = Field(
         default={
             "start": "<|begin_of_text|>",
             "start_role": "<|begin_of_text|><|start_header_id|>{role}<|end_header_id|>",
@@ -1322,10 +1305,10 @@ class ChatSambaStudio(BaseChatModel):
      or for StandAlone v1 and v2 endpoints) 
     default to llama3 special tokens"""
 
-    model_kwargs: Dict[str, Any] = Field(default_factory=dict)
+    model_kwargs: dict[str, Any] = Field(default_factory=dict)
     """Key word arguments to pass to the model."""
 
-    additional_headers: Dict[str, Any] = Field(default={})
+    additional_headers: dict[str, Any] = Field(default={})
     """Additional headers to send in request"""
 
     model_config = ConfigDict(populate_by_name=True, protected_namespaces=())
@@ -1336,19 +1319,19 @@ class ChatSambaStudio(BaseChatModel):
         return True
 
     @classmethod
-    def get_lc_namespace(cls) -> List[str]:
+    def get_lc_namespace(cls) -> list[str]:
         """Get the namespace of the langchain object."""
         return ["langchain_sambanova", "chat_models"]
 
     @property
-    def lc_secrets(self) -> Dict[str, str]:
+    def lc_secrets(self) -> dict[str, str]:
         return {
             "sambastudio_url": "sambastudio_url",
             "sambastudio_api_key": "sambastudio_api_key",
         }
 
     @property
-    def _identifying_params(self) -> Dict[str, Any]:
+    def _identifying_params(self) -> dict[str, Any]:
         """Return a dictionary of identifying parameters.
 
         This information is used by the LangChain callback system, which
@@ -1402,18 +1385,17 @@ class ChatSambaStudio(BaseChatModel):
 
     def bind_tools(
         self,
-        tools: Sequence[Union[Dict[str, Any], Type[Any], Callable[..., Any], BaseTool]],
+        tools: Sequence[Union[dict[str, Any], type[Any], Callable[..., Any], BaseTool]],
         *,
-        tool_choice: Optional[Union[Dict[str, Any], bool, str]] = None,
+        tool_choice: Optional[Union[dict[str, Any], bool, str]] = None,
         parallel_tool_calls: Optional[bool] = False,
         **kwargs: Any,
     ) -> Runnable[LanguageModelInput, BaseMessage]:
-        """Bind tool-like objects to this chat model
+        """Bind tool-like objects to this chat model.
 
         tool_choice: does not currently support "any", choice like
         should be one of ["auto", "none", "required"]
         """
-
         formatted_tools = [convert_to_openai_tool(tool) for tool in tools]
 
         if tool_choice:
@@ -1425,14 +1407,14 @@ class ChatSambaStudio(BaseChatModel):
                 if tool_choice:
                     tool_choice = "required"
             elif isinstance(tool_choice, dict):
-                raise ValueError(
-                    "tool_choice must be one of ['auto', 'none', 'required']"
-                )
+                msg = "tool_choice must be one of ['auto', 'none', 'required']"
+                raise ValueError(msg)
             else:
-                raise ValueError(
+                msg = (
                     f"Unrecognized tool_choice type. Expected str, bool"
                     f"Received: {tool_choice}"
                 )
+                raise ValueError(msg)
         else:
             tool_choice = "auto"
         kwargs["tool_choice"] = tool_choice
@@ -1441,14 +1423,14 @@ class ChatSambaStudio(BaseChatModel):
 
     def with_structured_output(
         self,
-        schema: Optional[Union[Dict[str, Any], Type[BaseModel]]] = None,
+        schema: Optional[Union[dict[str, Any], type[BaseModel]]] = None,
         *,
         method: Literal["function_calling", "json_mode", "json_schema"] = "json_schema",
         include_raw: bool = False,
         strict: bool = False,
         **kwargs: Any,
-    ) -> Runnable[LanguageModelInput, Union[Dict[str, Any], BaseModel]]:
-        """Model wrapper that returns outputs formatted to match the given schema.
+    ) -> Runnable[LanguageModelInput, Union[dict[str, Any], BaseModel]]:
+        r"""Model wrapper that returns outputs formatted to match the given schema.
 
         Args:
             schema:
@@ -1518,17 +1500,13 @@ class ChatSambaStudio(BaseChatModel):
                     '''An answer to the user question along with justification for the answer.'''
 
                     answer: str
-                    justification: str = Field(
-                        description="A justification for the answer."
-                    )
+                    justification: str = Field(description="A justification for the answer.")
 
 
                 llm = ChatSambaStudio(model="Meta-Llama-3.3-70B-Instruct", temperature=0)
                 structured_llm = llm.with_structured_output(AnswerWithJustification)
 
-                structured_llm.invoke(
-                    "What weighs more a pound of bricks or a pound of feathers"
-                )
+                structured_llm.invoke("What weighs more a pound of bricks or a pound of feathers")
 
                 # -> AnswerWithJustification(
                 #     answer='They weigh the same',
@@ -1550,13 +1528,9 @@ class ChatSambaStudio(BaseChatModel):
 
 
                 llm = ChatSambaStudio(model="Meta-Llama-3.3-70B-Instruct", temperature=0)
-                structured_llm = llm.with_structured_output(
-                    AnswerWithJustification, include_raw=True
-                )
+                structured_llm = llm.with_structured_output(AnswerWithJustification, include_raw=True)
 
-                structured_llm.invoke(
-                    "What weighs more a pound of bricks or a pound of feathers"
-                )
+                structured_llm.invoke("What weighs more a pound of bricks or a pound of feathers")
                 # -> {
                 #     'raw': AIMessage(content='', additional_kwargs={'tool_calls': [{'function': {'arguments': '{"answer": "They weigh the same.", "justification": "A pound is a unit of weight or mass, so one pound of bricks and one pound of feathers both weigh the same amount."}', 'name': 'AnswerWithJustification'}, 'id': 'call_17a431fc6a4240e1bd', 'type': 'function'}]}, response_metadata={'finish_reason': 'tool_calls', 'usage': {'acceptance_rate': 5, 'completion_tokens': 53, 'completion_tokens_after_first_per_sec': 343.7964936837758, 'completion_tokens_after_first_per_sec_first_ten': 439.1205661878638, 'completion_tokens_per_sec': 162.8511306784833, 'end_time': 1731527851.0698032, 'is_last_response': True, 'prompt_tokens': 213, 'start_time': 1731527850.7137961, 'time_to_first_token': 0.20475482940673828, 'total_latency': 0.32545061111450196, 'total_tokens': 266, 'total_tokens_per_sec': 817.3283162354066}, 'model_name': 'Meta-Llama-3.3-70B-Instruct', 'system_fingerprint': 'fastcoe', 'created': 1731527850}, id='95667eaf-447f-4b53-bb6e-b6e1094ded88', tool_calls=[{'name': 'AnswerWithJustification', 'args': {'answer': 'They weigh the same.', 'justification': 'A pound is a unit of weight or mass, so one pound of bricks and one pound of feathers both weigh the same amount.'}, 'id': 'call_17a431fc6a4240e1bd', 'type': 'tool_call'}]),
                 #     'parsed': AnswerWithJustification(answer='They weigh the same.', justification='A pound is a unit of weight or mass, so one pound of bricks and one pound of feathers both weigh the same amount.'),
@@ -1577,17 +1551,13 @@ class ChatSambaStudio(BaseChatModel):
                     '''An answer to the user question along with justification for the answer.'''
 
                     answer: str
-                    justification: Annotated[
-                        Optional[str], None, "A justification for the answer."
-                    ]
+                    justification: Annotated[Optional[str], None, "A justification for the answer."]
 
 
                 llm = ChatSambaStudio(model="Meta-Llama-3.3-70B-Instruct", temperature=0)
                 structured_llm = llm.with_structured_output(AnswerWithJustification)
 
-                structured_llm.invoke(
-                    "What weighs more a pound of bricks or a pound of feathers"
-                )
+                structured_llm.invoke("What weighs more a pound of bricks or a pound of feathers")
                 # -> {
                 #     'answer': 'They weigh the same',
                 #     'justification': 'A pound is a unit of weight or mass, so one pound of bricks and one pound of feathers both weigh the same amount.'
@@ -1599,24 +1569,22 @@ class ChatSambaStudio(BaseChatModel):
                 from langchain_sambanova import ChatSambaStudio
 
                 oai_schema = {
-                    'name': 'AnswerWithJustification',
-                    'description': 'An answer to the user question along with justification for the answer.',
-                    'parameters': {
-                        'type': 'object',
-                        'properties': {
-                            'answer': {'type': 'string'},
-                            'justification': {'description': 'A justification for the answer.', 'type': 'string'}
+                    "name": "AnswerWithJustification",
+                    "description": "An answer to the user question along with justification for the answer.",
+                    "parameters": {
+                        "type": "object",
+                        "properties": {
+                            "answer": {"type": "string"},
+                            "justification": {"description": "A justification for the answer.", "type": "string"},
                         },
-                       'required': ['answer']
-                   }
+                        "required": ["answer"],
+                    },
                 }
 
                 llm = ChatSambaStudio(model="Meta-Llama-3.3-70B-Instruct", temperature=0)
                 structured_llm = llm.with_structured_output(oai_schema)
 
-                structured_llm.invoke(
-                    "What weighs more a pound of bricks or a pound of feathers"
-                )
+                structured_llm.invoke("What weighs more a pound of bricks or a pound of feathers")
                 # -> {
                 #     'answer': 'They weigh the same',
                 #     'justification': 'A pound is a unit of weight or mass, so one pound of bricks and one pound of feathers both weigh the same amount.'
@@ -1696,14 +1664,16 @@ class ChatSambaStudio(BaseChatModel):
 
         """  # noqa: E501
         if kwargs:
-            raise ValueError(f"Received unsupported arguments {kwargs}")
+            msg = f"Received unsupported arguments {kwargs}"
+            raise ValueError(msg)
         is_pydantic_schema = _is_pydantic_class(schema)
         if method == "function_calling":
             if schema is None:
-                raise ValueError(
+                msg = (
                     "schema must be specified when method is 'function_calling'. "
                     "Received None."
                 )
+                raise ValueError(msg)
             tool_name = convert_to_openai_tool(schema)["function"]["name"]
             llm = self.bind_tools(
                 [schema],
@@ -1731,17 +1701,18 @@ class ChatSambaStudio(BaseChatModel):
                 },
             )
             if is_pydantic_schema:
-                schema = cast(Type[BaseModel], schema)
+                schema = cast(type[BaseModel], schema)
                 output_parser = PydanticOutputParser(pydantic_object=schema)
             else:
                 output_parser = JsonOutputParser()
 
         elif method == "json_schema":
             if schema is None:
-                raise ValueError(
+                msg = (
                     "schema must be specified when method is not 'json_mode'. "
                     "Received None."
                 )
+                raise ValueError(msg)
             response_format = _convert_to_openai_response_format(schema, strict=strict)
             llm = self.bind(
                 response_format=response_format,
@@ -1751,15 +1722,16 @@ class ChatSambaStudio(BaseChatModel):
                 },
             )
             if is_pydantic_schema:
-                schema = cast(Type[BaseModel], schema)
+                schema = cast(type[BaseModel], schema)
                 output_parser = PydanticOutputParser(pydantic_object=schema)
             else:
                 output_parser = JsonOutputParser()
         else:
-            raise ValueError(
+            msg = (
                 f"Unrecognized method argument. Expected one of 'function_calling' or "
                 f"'json_mode'. Received: '{method}'"
             )
+            raise ValueError(msg)
 
         if include_raw:
             parser_assign = RunnablePassthrough.assign(
@@ -1770,12 +1742,11 @@ class ChatSambaStudio(BaseChatModel):
                 [parser_none], exception_key="parsing_error"
             )
             return RunnableMap(raw=llm) | parser_with_fallback
-        else:
-            return llm | output_parser
+
+        return llm | output_parser
 
     def _get_role(self, message: BaseMessage) -> str:
-        """
-        Get the role of LangChain BaseMessage
+        """Get the role of LangChain BaseMessage.
 
         Args:
             message: LangChain BaseMessage
@@ -1794,12 +1765,13 @@ class ChatSambaStudio(BaseChatModel):
         elif isinstance(message, ChatMessage):
             role = message.role
         else:
-            raise TypeError(f"Got unknown type {message}")
+            msg = f"Got unknown type {message}"
+            raise TypeError(msg)
         return role
 
-    def _messages_to_string(self, messages: List[BaseMessage], **kwargs: Any) -> str:
-        """
-        Convert a list of BaseMessages to a:
+    def _messages_to_string(self, messages: list[BaseMessage], **kwargs: Any) -> str:
+        """Convert a list of BaseMessages to a string.
+
         - dumped json string with Role / content dict structure
             when process_prompt is true,
         - string with special tokens if process_prompt is false
@@ -1807,12 +1779,13 @@ class ChatSambaStudio(BaseChatModel):
 
         Args:
             messages: list of BaseMessages
+            kwargs: Additional args
 
         Returns:
             str: string to send as model input depending on process_prompt param
         """
         if self.process_prompt:
-            messages_dict: Dict[str, Any] = {
+            messages_dict: dict[str, Any] = {
                 "conversation_id": "sambaverse-conversation-id",
                 "messages": [],
                 **kwargs,
@@ -1851,12 +1824,13 @@ class ChatSambaStudio(BaseChatModel):
             messages_string = json.dumps(messages_dict)
 
         else:
-            if "tools" in kwargs.keys():
-                raise NotImplementedError(
+            if "tools" in kwargs:
+                msg = (
                     "tool calling not supported in API Generic V2 without"
                     " process_prompt, switch to OpenAI compatible API"
                     " or Generic V2 API with process_prompt=True"
                 )
+                raise NotImplementedError(msg)
             messages_string = self.special_tokens["start"]
             for message in messages:
                 messages_string += self.special_tokens["start_role"].format(
@@ -1868,9 +1842,8 @@ class ChatSambaStudio(BaseChatModel):
 
         return messages_string
 
-    def _get_sambastudio_urls(self, url: str) -> Tuple[str, str]:
-        """
-        Get streaming and non streaming URLs from the given URL
+    def _get_sambastudio_urls(self, url: str) -> tuple[str, str]:
+        """Get streaming and non streaming URLs from the given URL.
 
         Args:
             url: string with sambastudio base or streaming endpoint url
@@ -1891,29 +1864,30 @@ class ChatSambaStudio(BaseChatModel):
                 if "generic" in url:
                     streaming_url = "generic/stream".join(url.split("generic"))
                 else:
-                    raise ValueError("Unsupported URL")
+                    msg = "Unsupported URL"
+                    raise ValueError(msg)
         return non_streaming_url, streaming_url
 
     def _handle_request(
         self,
-        messages: List[BaseMessage],
-        stop: Optional[List[str]] = None,
+        messages: list[BaseMessage],
+        stop: Optional[list[str]] = None,
+        *,
         streaming: Optional[bool] = False,
         **kwargs: Any,
     ) -> Response:
-        """
-        Performs a post request to the LLM API.
+        """Performs a post request to the LLM API.
 
         Args:
-        messages_dicts: List of role / content dicts to use as input.
-        stop: list of stop tokens
-        streaming: wether to do a streaming call
+            messages: List of role / content dicts to use as input.
+            stop: list of stop tokens
+            streaming: wether to do a streaming call
+            kwargs: Additional parameters passed to the underlying API client.
 
         Returns:
             A request Response object
         """
-
-        assert self.sambastudio_api_key is not None
+        assert self.sambastudio_api_key is not None  # noqa: S101
 
         # create request payload for openai compatible API
         if "chat/completions" in self.sambastudio_url:
@@ -1943,7 +1917,7 @@ class ChatSambaStudio(BaseChatModel):
             items = [
                 {"id": "item0", "value": self._messages_to_string(messages, **kwargs)}
             ]
-            params: Dict[str, Any] = {
+            params: dict[str, Any] = {
                 "select_expert": self.model,
                 "process_prompt": self.process_prompt,
                 "max_tokens_to_generate": self.max_tokens,
@@ -1962,11 +1936,12 @@ class ChatSambaStudio(BaseChatModel):
 
         # create request payload for generic v1 API
         elif "api/predict/generic" in self.sambastudio_url:
-            if "tools" in kwargs.keys():
-                raise NotImplementedError(
+            if "tools" in kwargs:
+                msg = (
                     "tool calling not supported in API Generic V1, "
                     "switch to OpenAI compatible API or Generic V2 API"
                 )
+                raise NotImplementedError(msg)
             params = {
                 "select_expert": self.model,
                 "process_prompt": self.process_prompt,
@@ -1998,10 +1973,11 @@ class ChatSambaStudio(BaseChatModel):
             }
 
         else:
-            raise ValueError(
+            msg = (
                 f"Unsupported URL{self.sambastudio_url} "
                 "only openai, generic v1 and generic v2 APIs are supported"
             )
+            raise ValueError(msg)
 
         http_session = requests.Session()
         if streaming:
@@ -2013,34 +1989,34 @@ class ChatSambaStudio(BaseChatModel):
                 self.non_streaming_url, headers=headers, json=data, stream=False
             )
         if response.status_code != 200:
-            raise RuntimeError(
+            msg = (
                 f"Sambanova /complete call failed with status code "
                 f"{response.status_code}."
                 f"{response.text}."
             )
+            raise RuntimeError(msg)
         return response
 
     def _process_response(self, response: Response) -> AIMessage:
-        """
-        Process a non streaming response from the api
+        """Process a non streaming response from the api.
 
         Args:
             response: A request Response object
 
-        Returns
+        Returns:
             generation: an AIMessage with model generation
         """
-
         # Extract json payload form response
         try:
             response_dict = response.json()
         except Exception as e:
-            raise RuntimeError(
+            msg = (
                 f"Sambanova /complete call failed couldn't get JSON response {e}"
                 f"response: {response.text}"
             )
+            raise RuntimeError(msg) from e
 
-        additional_kwargs: Dict[str, Any] = {}
+        additional_kwargs: dict[str, Any] = {}
         tool_calls = []
         invalid_tool_calls = []
 
@@ -2049,7 +2025,7 @@ class ChatSambaStudio(BaseChatModel):
             content = response_dict["choices"][0]["message"].get("content", "")
             if content is None:
                 content = ""
-            id = response_dict["id"]
+            response_id = response_dict["id"]
             response_metadata = {
                 "finish_reason": response_dict["choices"][0]["finish_reason"],
                 "usage": response_dict.get("usage"),
@@ -2091,7 +2067,7 @@ class ChatSambaStudio(BaseChatModel):
         # process response payload for generic v2 API
         elif "api/v2/predict/generic" in self.sambastudio_url:
             content = response_dict["items"][0]["value"]["completion"]
-            id = response_dict["items"][0]["id"]
+            response_id = response_dict["items"][0]["id"]
             response_metadata = response_dict["items"][0]
             usage_metadata = {
                 "input_tokens": response_dict["items"][0]["value"].get(
@@ -2124,7 +2100,7 @@ class ChatSambaStudio(BaseChatModel):
         # process response payload for generic v1 API
         elif "api/predict/generic" in self.sambastudio_url:
             content = response_dict["predictions"][0]["completion"]
-            id = None
+            response_id = None
             response_metadata = response_dict
             usage_metadata = {
                 "input_tokens": response_dict["predictions"][0].get(
@@ -2139,10 +2115,11 @@ class ChatSambaStudio(BaseChatModel):
             }
 
         else:
-            raise ValueError(
+            msg = (
                 f"Unsupported URL{self.sambastudio_url} "
                 "only openai, generic v1 and generic v2 APIs are supported"
             )
+            raise ValueError(msg)
 
         return AIMessage(
             content=content,
@@ -2151,14 +2128,13 @@ class ChatSambaStudio(BaseChatModel):
             invalid_tool_calls=invalid_tool_calls,
             response_metadata=response_metadata,
             usage_metadata=usage_metadata,
-            id=id,
+            id=response_id,
         )
 
     def _process_stream_response(
         self, response: Response
     ) -> Iterator[BaseMessageChunk]:
-        """
-        Process a streaming response from the api
+        """Process a streaming response from the api.
 
         Args:
             response: An iterable request Response object
@@ -2166,14 +2142,14 @@ class ChatSambaStudio(BaseChatModel):
         Yields:
             generation: an AIMessageChunk with model partial generation
         """
-
         try:
             import sseclient
-        except ImportError:
-            raise ImportError(
+        except ImportError as e:
+            msg = (
                 "could not import sseclient library"
                 "Please install it with `pip install sseclient-py`."
             )
+            raise ImportError(msg) from e
 
         # process response payload for openai compatible API
         if "chat/completions" in self.sambastudio_url:
@@ -2181,11 +2157,12 @@ class ChatSambaStudio(BaseChatModel):
 
             for event in client.events():
                 if event.event == "error_event":
-                    raise RuntimeError(
+                    msg = (
                         f"Sambanova /complete call failed with status code "
                         f"{response.status_code}."
                         f"{event.data}."
                     )
+                    raise RuntimeError(msg)
                 try:
                     # check if the response is a final event
                     # in that case event data response is '[DONE]'
@@ -2193,17 +2170,19 @@ class ChatSambaStudio(BaseChatModel):
                         if isinstance(event.data, str):
                             data = json.loads(event.data)
                         else:
-                            raise RuntimeError(
+                            msg = (
                                 f"Sambanova /complete call failed with status code "
                                 f"{response.status_code}."
                                 f"{event.data}."
                             )
+                            raise RuntimeError(msg)
                         if data.get("error"):
-                            raise RuntimeError(
+                            msg = (
                                 f"Sambanova /complete call failed with status code "
                                 f"{response.status_code}."
                                 f"{event.data}."
                             )
+                            raise RuntimeError(msg)
                         metadata = {}
                         usage_metadata: Optional[UsageMetadata] = None
                         tool_calls = []
@@ -2217,7 +2196,7 @@ class ChatSambaStudio(BaseChatModel):
                             content = data["choices"][0]["delta"].get("content", "")
                             if content is None:
                                 content = ""
-                            id = data["id"]
+                            response_id = data["id"]
                             raw_tool_calls = data["choices"][0]["delta"].get(
                                 "tool_calls"
                             )
@@ -2248,7 +2227,7 @@ class ChatSambaStudio(BaseChatModel):
                                         )
                         else:
                             content = ""
-                            id = data["id"]
+                            response_id = data["id"]
                             metadata = {
                                 "finish_reason": finish_reason
                                 or data["choices"][0].get("finish_reason"),
@@ -2273,7 +2252,7 @@ class ChatSambaStudio(BaseChatModel):
                             usage_metadata = None
                         chunk = AIMessageChunk(
                             content=content,
-                            id=id,
+                            id=response_id,
                             tool_calls=tool_calls,  # type: ignore
                             invalid_tool_calls=invalid_tool_calls,
                             additional_kwargs=additional_kwargs,
@@ -2283,10 +2262,11 @@ class ChatSambaStudio(BaseChatModel):
                         yield chunk
 
                 except Exception as e:
-                    raise RuntimeError(
+                    msg = (
                         f"Error getting content chunk raw streamed response: {e}"
                         f"data: {event.data}"
                     )
+                    raise RuntimeError(msg) from e
 
         # process response payload for generic v2 API
         elif "api/v2/predict/generic" in self.sambastudio_url:
@@ -2299,7 +2279,7 @@ class ChatSambaStudio(BaseChatModel):
                     additional_kwargs = {}
                     data = json.loads(line)
                     content = data["result"]["items"][0]["value"]["stream_token"]
-                    id = data["result"]["items"][0]["id"]
+                    response_id = data["result"]["items"][0]["id"]
                     raw_tool_calls = data["result"]["items"][0]["value"].get(
                         "tool_calls"
                     )
@@ -2367,7 +2347,7 @@ class ChatSambaStudio(BaseChatModel):
                         }
                     yield AIMessageChunk(
                         content=content,
-                        id=id,
+                        id=response_id,
                         tool_calls=tool_calls,  # type: ignore
                         invalid_tool_calls=invalid_tool_calls,
                         response_metadata=metadata,
@@ -2376,10 +2356,11 @@ class ChatSambaStudio(BaseChatModel):
                     )
 
                 except Exception as e:
-                    raise RuntimeError(
+                    msg = (
                         f"Error getting content chunk raw streamed response: {e}"
                         f"line: {line}"
                     )
+                    raise RuntimeError(msg) from e
 
         # process response payload for generic v1 API
         elif "api/predict/generic" in self.sambastudio_url:
@@ -2387,7 +2368,7 @@ class ChatSambaStudio(BaseChatModel):
                 try:
                     data = json.loads(line)
                     content = data["result"]["responses"][0]["stream_token"]
-                    id = None
+                    response_id = None
                     metadata = {}
                     usage_metadata = None
                     if data["result"]["responses"][0]["is_last_response"]:
@@ -2439,33 +2420,34 @@ class ChatSambaStudio(BaseChatModel):
                         }
                     yield AIMessageChunk(
                         content=content,
-                        id=id,
+                        id=response_id,
                         response_metadata=metadata,
                         usage_metadata=usage_metadata,
                         additional_kwargs={},
                     )
 
                 except Exception as e:
-                    raise RuntimeError(
+                    msg = (
                         f"Error getting content chunk raw streamed response: {e}"
                         f"line: {line}"
                     )
+                    raise RuntimeError(msg) from e
 
         else:
-            raise ValueError(
+            msg = (
                 f"Unsupported URL{self.sambastudio_url} "
                 "only openai, generic v1 and generic v2 APIs are supported"
             )
+            raise ValueError(msg)
 
     def _generate(
         self,
-        messages: List[BaseMessage],
-        stop: Optional[List[str]] = None,
+        messages: list[BaseMessage],
+        stop: Optional[list[str]] = None,
         run_manager: Optional[CallbackManagerForLLMRun] = None,
         **kwargs: Any,
     ) -> ChatResult:
-        """
-        Call SambaStudio models.
+        """Call SambaStudio models.
 
         Args:
             messages: the prompt composed of a list of messages.
@@ -2476,6 +2458,7 @@ class ChatSambaStudio(BaseChatModel):
                   it makes it much easier to parse the output of the model
                   downstream and understand why generation stopped.
             run_manager: A run manager with callbacks for the LLM.
+            kwargs: Extra arguments to pass in generation
 
         Returns:
             result: ChatResult with model generation
@@ -2493,13 +2476,12 @@ class ChatSambaStudio(BaseChatModel):
 
     def _stream(
         self,
-        messages: List[BaseMessage],
-        stop: Optional[List[str]] = None,
+        messages: list[BaseMessage],
+        stop: Optional[list[str]] = None,
         run_manager: Optional[CallbackManagerForLLMRun] = None,
         **kwargs: Any,
     ) -> Iterator[ChatGenerationChunk]:
-        """
-        Stream the output of the SambaStudio model.
+        """Stream the output of the SambaStudio model.
 
         Args:
             messages: the prompt composed of a list of messages.
@@ -2510,6 +2492,7 @@ class ChatSambaStudio(BaseChatModel):
                   it makes it much easier to parse the output of the model
                   downstream and understand why generation stopped.
             run_manager: A run manager with callbacks for the LLM.
+            kwargs: Extra arguments to pass in generation
 
         Yields:
             chunk: ChatGenerationChunk with model partial generation
