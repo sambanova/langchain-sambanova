@@ -1,7 +1,5 @@
 """Test ChatSambaNova chat model."""
 
-from typing import Type
-
 from langchain_tests.integration_tests import ChatModelIntegrationTests
 
 from langchain_sambanova.chat_models import ChatSambaNovaCloud, ChatSambaStudio
@@ -9,7 +7,7 @@ from langchain_sambanova.chat_models import ChatSambaNovaCloud, ChatSambaStudio
 
 class TestSambaNovaCloudBase(ChatModelIntegrationTests):
     @property
-    def chat_model_class(self) -> Type[ChatSambaNovaCloud]:
+    def chat_model_class(self) -> type[ChatSambaNovaCloud]:
         return ChatSambaNovaCloud
 
     @property
@@ -35,7 +33,7 @@ class TestSambaNovaCloudBase(ChatModelIntegrationTests):
 
 class TestSambaStudioBase(ChatModelIntegrationTests):
     @property
-    def chat_model_class(self) -> Type[ChatSambaStudio]:
+    def chat_model_class(self) -> type[ChatSambaStudio]:
         return ChatSambaStudio
 
     @property

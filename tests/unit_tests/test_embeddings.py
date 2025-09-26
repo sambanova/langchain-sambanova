@@ -1,7 +1,5 @@
 """Test embedding model integration."""
 
-from typing import Type
-
 from langchain_tests.unit_tests import EmbeddingsUnitTests
 
 from langchain_sambanova.embeddings import (
@@ -12,7 +10,7 @@ from langchain_sambanova.embeddings import (
 
 class TestSambaStudioEmbeddingsBase(EmbeddingsUnitTests):
     @property
-    def embeddings_class(self) -> Type[SambaStudioEmbeddings]:
+    def embeddings_class(self) -> type[SambaStudioEmbeddings]:
         return SambaStudioEmbeddings
 
     @property
@@ -22,7 +20,7 @@ class TestSambaStudioEmbeddingsBase(EmbeddingsUnitTests):
 
 class TestSambaNovaCloudEmbeddingsBase(EmbeddingsUnitTests):
     @property
-    def embeddings_class(self) -> Type[SambaNovaCloudEmbeddings]:
+    def embeddings_class(self) -> type[SambaNovaCloudEmbeddings]:
         return SambaNovaCloudEmbeddings
 
     @property

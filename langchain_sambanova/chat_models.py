@@ -119,7 +119,7 @@ def _is_pydantic_class(obj: Any) -> bool:
 
 def _convert_to_openai_response_format(
     schema: Union[dict[str, Any], type], *, strict: Optional[bool] = None
-) -> Union[dict, TypeBaseModel]:
+) -> Union[dict, TypeBaseModel]:  # type: ignore  # noqa: PGH003
     if isinstance(schema, BaseModel):
         schema = schema.model_dump()
     elif isinstance(schema, type) and issubclass(schema, BaseModel):
@@ -302,7 +302,7 @@ class ChatSambaNovaCloud(BaseChatModel):
             response = chat.invoke(messages)
             print(response.response_metadata)
 
-    """
+    """  # noqa: E501
 
     sambanova_url: str = Field(default="")
     """SambaNova Cloud Url"""
@@ -699,7 +699,7 @@ class ChatSambaNovaCloud(BaseChatModel):
             )
             if is_pydantic_schema:
                 output_parser: OutputParserLike[Any] = PydanticToolsParser(
-                    tools=[schema],  # type: ignore
+                    tools=[schema],  # type: ignore  # noqa: PGH003
                     first_tool_only=True,
                 )
             else:
@@ -756,8 +756,8 @@ class ChatSambaNovaCloud(BaseChatModel):
                 [parser_none], exception_key="parsing_error"
             )
             return RunnableMap(raw=llm) | parser_with_fallback
-        else:
-            return llm | output_parser
+
+        return llm | output_parser
 
     def _handle_request(
         self,
@@ -772,7 +772,7 @@ class ChatSambaNovaCloud(BaseChatModel):
         Args:
             messages_dicts: List of role / content dicts to use as input.
             stop: list of stop tokens
-            streaming: wether to do a streaming call
+            streaming: whether to do a streaming call
             **kwargs: Additional parameters passed to the underlying API client.
 
         Returns:
@@ -837,8 +837,8 @@ class ChatSambaNovaCloud(BaseChatModel):
             if response_dict.get("error"):
                 msg = (
                     f"Sambanova /complete call failed with status code "
-                    f"{response.status_code}.",
-                    f"{response_dict}.",
+                    f"{response.status_code}."
+                    f"{response_dict}."
                 )
                 raise RuntimeError(msg)
         except Exception as e:
@@ -913,7 +913,7 @@ class ChatSambaNovaCloud(BaseChatModel):
             )
             raise ImportError(msg) from e
 
-        client = sseclient.SSEClient(response)  # type: ignore
+        client = sseclient.SSEClient(response)  # type: ignore  # noqa: PGH003
 
         for event in client.events():
             if event.event == "error_event":
@@ -1004,7 +1004,7 @@ class ChatSambaNovaCloud(BaseChatModel):
                     chunk = AIMessageChunk(
                         content=content,
                         id=response_id,
-                        tool_calls=tool_calls,  # type: ignore
+                        tool_calls=tool_calls,  # type: ignore  # noqa: PGH003
                         invalid_tool_calls=invalid_tool_calls,
                         additional_kwargs=additional_kwargs,
                         response_metadata=metadata,
@@ -1110,8 +1110,8 @@ class ChatSambaStudio(BaseChatModel):
                 max_tokens = max number of tokens to generate,
                 temperature = model temperature,
                 top_p = model top p,
-                do_sample = wether to do sample
-                process_prompt = wether to process prompt
+                do_sample = whether to do sample
+                process_prompt = whether to process prompt
                     (set for Bundle generic v1 and v2 endpoints)
                 stream_options = include usage to get generation metrics
                 special_tokens = start, start_role, end_role, end special tokens
@@ -1126,16 +1126,16 @@ class ChatSambaStudio(BaseChatModel):
             (set for Bundle endpoints).
         streaming: bool
             Whether to use streaming
-        max_tokens: inthandler when using non streaming methods
+        max_tokens: int handler when using non streaming methods
             max tokens to generate
         temperature: float
             model temperature
         top_p: float
             model top p
         do_sample: bool
-            wether to do sample
+            whether to do sample
         process_prompt:
-            wether to process prompt (set for Bundle generic v1 and v2 endpoints)
+            whether to process prompt (set for Bundle generic v1 and v2 endpoints)
         stream_options: dict
             stream options, include usage to get generation metrics
         special_tokens: dict
@@ -1163,8 +1163,8 @@ class ChatSambaStudio(BaseChatModel):
                 max_tokens = max number of tokens to generate,
                 temperature = model temperature,
                 top_p = model top p,
-                do_sample = wether to do sample
-                process_prompt = wether to process prompt
+                do_sample = whether to do sample
+                process_prompt = whether to process prompt
                     (set for Bundle generic v1 and v2 endpoints)
                 stream_options = include usage to get generation metrics
                 special_tokens = start, start_role, end_role, and special tokens
@@ -1251,7 +1251,7 @@ class ChatSambaStudio(BaseChatModel):
 
             response = chat.invoke(messages)
             print(response.response_metadata)
-    """
+    """  # noqa: E501
 
     sambastudio_url: str = Field(default="")
     """SambaStudio Url"""
@@ -1300,9 +1300,9 @@ class ChatSambaStudio(BaseChatModel):
             "end": "<|start_header_id|>assistant<|end_header_id|>\n",
         }
     )
-    """start, start_role, end_role and end special tokens 
-    (set for Bundle generic v1 and v2 endpoints when process prompt set to false 
-     or for StandAlone v1 and v2 endpoints) 
+    """start, start_role, end_role and end special tokens
+    (set for Bundle generic v1 and v2 endpoints when process prompt set to false
+     or for StandAlone v1 and v2 endpoints)
     default to llama3 special tokens"""
 
     model_kwargs: dict[str, Any] = Field(default_factory=dict)
@@ -1786,7 +1786,7 @@ class ChatSambaStudio(BaseChatModel):
         """
         if self.process_prompt:
             messages_dict: dict[str, Any] = {
-                "conversation_id": "sambaverse-conversation-id",
+                "conversation_id": "sambastudio-conversation-id",
                 "messages": [],
                 **kwargs,
             }
@@ -1881,7 +1881,7 @@ class ChatSambaStudio(BaseChatModel):
         Args:
             messages: List of role / content dicts to use as input.
             stop: list of stop tokens
-            streaming: wether to do a streaming call
+            streaming: whether to do a streaming call
             kwargs: Additional parameters passed to the underlying API client.
 
         Returns:
@@ -2153,7 +2153,7 @@ class ChatSambaStudio(BaseChatModel):
 
         # process response payload for openai compatible API
         if "chat/completions" in self.sambastudio_url:
-            client = sseclient.SSEClient(response)  # type: ignore
+            client = sseclient.SSEClient(response)  # type: ignore  # noqa: PGH003
 
             for event in client.events():
                 if event.event == "error_event":
@@ -2253,7 +2253,7 @@ class ChatSambaStudio(BaseChatModel):
                         chunk = AIMessageChunk(
                             content=content,
                             id=response_id,
-                            tool_calls=tool_calls,  # type: ignore
+                            tool_calls=tool_calls,  # type: ignore  # noqa: PGH003
                             invalid_tool_calls=invalid_tool_calls,
                             additional_kwargs=additional_kwargs,
                             response_metadata=metadata,
@@ -2348,7 +2348,7 @@ class ChatSambaStudio(BaseChatModel):
                     yield AIMessageChunk(
                         content=content,
                         id=response_id,
-                        tool_calls=tool_calls,  # type: ignore
+                        tool_calls=tool_calls,  # type: ignore  # noqa: PGH003
                         invalid_tool_calls=invalid_tool_calls,
                         response_metadata=metadata,
                         additional_kwargs=additional_kwargs,

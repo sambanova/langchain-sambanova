@@ -1,7 +1,5 @@
 """Test SambaNova embeddings."""
 
-from typing import Type
-
 from langchain_tests.integration_tests import EmbeddingsIntegrationTests
 
 from langchain_sambanova.embeddings import (
@@ -12,7 +10,7 @@ from langchain_sambanova.embeddings import (
 
 class TestSambaStudioEmbeddingsBase(EmbeddingsIntegrationTests):
     @property
-    def embeddings_class(self) -> Type[SambaStudioEmbeddings]:
+    def embeddings_class(self) -> type[SambaStudioEmbeddings]:
         return SambaStudioEmbeddings
 
     @property
@@ -22,7 +20,7 @@ class TestSambaStudioEmbeddingsBase(EmbeddingsIntegrationTests):
 
 class TestSambaNovaCloudEmbeddingsBase(EmbeddingsIntegrationTests):
     @property
-    def embeddings_class(self) -> Type[SambaNovaCloudEmbeddings]:
+    def embeddings_class(self) -> type[SambaNovaCloudEmbeddings]:
         return SambaNovaCloudEmbeddings
 
     @property

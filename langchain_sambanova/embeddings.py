@@ -181,10 +181,7 @@ class SambaNovaCloudEmbeddings(BaseModel, Embeddings):
                 embedding = [item["embedding"] for item in response.json()["data"]]
                 embeddings.extend(embedding)
             except KeyError as e:
-                msg = (
-                    "'data' not found in endpoint response",
-                    response.json(),
-                )
+                msg = "'data' not found in endpoint response"
                 raise KeyError(msg) from e
 
         return embeddings
@@ -227,10 +224,7 @@ class SambaNovaCloudEmbeddings(BaseModel, Embeddings):
         try:
             embedding = response.json()["data"][0]["embedding"]
         except KeyError as e:
-            msg = (
-                "'data' not found in endpoint response",
-                response.json(),
-            )
+            msg = "'data' not found in endpoint response"
             raise KeyError(msg) from e
 
         return embedding
@@ -419,10 +413,7 @@ class SambaStudioEmbeddings(BaseModel, Embeddings):
                     embedding = [item["value"] for item in response.json()["items"]]
                     embeddings.extend(embedding)
                 except KeyError as e:
-                    msg = (
-                        "'items' not found in endpoint response",
-                        response.json(),
-                    )
+                    msg = "'items' not found in endpoint response"
                     raise KeyError(msg) from e
 
         elif "api/predict/generic" in self.sambastudio_url:
@@ -454,10 +445,7 @@ class SambaStudioEmbeddings(BaseModel, Embeddings):
                     embedding = response.json()["predictions"]
                     embeddings.extend(embedding)
                 except KeyError as e:
-                    msg = (
-                        "'predictions' not found in endpoint response",
-                        response.json(),
-                    )
+                    msg = "'predictions' not found in endpoint response"
                     raise KeyError(msg) from e
 
         elif "/embeddings" in self.sambastudio_url:
@@ -490,10 +478,7 @@ class SambaStudioEmbeddings(BaseModel, Embeddings):
                     embedding = [item["embedding"] for item in response.json()["data"]]
                     embeddings.extend(embedding)
                 except KeyError as e:
-                    msg = (
-                        "'data' not found in endpoint response",
-                        response.json(),
-                    )
+                    msg = "'data' not found in endpoint response"
                     raise KeyError(msg) from e
 
         else:
@@ -541,10 +526,7 @@ class SambaStudioEmbeddings(BaseModel, Embeddings):
             try:
                 embedding = response.json()["items"][0]["value"]
             except KeyError as e:
-                msg = (
-                    "'items' not found in endpoint response",
-                    response.json(),
-                )
+                msg = "'items' not found in endpoint response"
                 raise KeyError(msg) from e
 
         elif "api/predict/generic" in self.sambastudio_url:
@@ -574,10 +556,7 @@ class SambaStudioEmbeddings(BaseModel, Embeddings):
             try:
                 embedding = response.json()["predictions"][0]
             except KeyError as e:
-                msg = (
-                    "'predictions' not found in endpoint response",
-                    response.json(),
-                )
+                msg = "'predictions' not found in endpoint response"
                 raise KeyError(msg) from e
 
         elif "/embeddings" in self.sambastudio_url:
@@ -607,10 +586,7 @@ class SambaStudioEmbeddings(BaseModel, Embeddings):
             try:
                 embedding = response.json()["data"][0]["embedding"]
             except KeyError as e:
-                msg = (
-                    "'data' not found in endpoint response",
-                    response.json(),
-                )
+                msg = "'data' not found in endpoint response"
                 raise KeyError(msg) from e
 
         else:
