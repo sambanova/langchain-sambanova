@@ -9,6 +9,7 @@ from collections.abc import AsyncGenerator, Generator, Mapping
 from typing import Any, Optional, Union
 
 import requests
+from langchain_core._api import deprecated
 from langchain_core.embeddings import Embeddings
 from langchain_core.utils import (
     convert_to_secret_str,
@@ -25,7 +26,7 @@ logger = logging.getLogger(__name__)
 
 
 class SambaNovaEmbeddings(BaseModel, Embeddings):
-    """SambaNovaCloud embedding models.
+    """SambaNova embedding models.
 
     Setup:
         Install ``langchain_sambanova`` and set environment variable
@@ -187,7 +188,7 @@ class SambaNovaEmbeddings(BaseModel, Embeddings):
     @model_validator(mode="after")
     def validate_environment(self) -> Self:
         """Validate that api key and python package exists in environment."""
-        client_params: dict = {
+        client_params: dict[str, Any] = {
             "api_key": (
                 self.sambanova_api_key.get_secret_value()
                 if self.sambanova_api_key
@@ -200,12 +201,12 @@ class SambaNovaEmbeddings(BaseModel, Embeddings):
             "default_query": self.default_query,
         }
         if not (self.client or None):
-            sync_specific: dict = (
+            sync_specific: dict[str, Any] = (
                 {"http_client": self.http_client} if self.http_client else {}
             )
             self.client = SambaNova(**client_params, **sync_specific).embeddings
         if not (self.async_client or None):
-            async_specific: dict = (
+            async_specific: dict[str, Any] = (
                 {"http_client": self.http_async_client}
                 if self.http_async_client
                 else {}
@@ -358,6 +359,11 @@ class SambaNovaEmbeddings(BaseModel, Embeddings):
         return embeddings
 
 
+@deprecated(
+    since="0.2.0",
+    alternative="langchain_sambanova.SambaNovaEmbeddings",
+    removal="1.0.0",
+)
 class SambaNovaCloudEmbeddings(BaseModel, Embeddings):
     """SambaNovaCloud embedding models.
 
@@ -432,13 +438,7 @@ class SambaNovaCloudEmbeddings(BaseModel, Embeddings):
         }
 
     def __init__(self, **kwargs: Any) -> None:
-        warnings.warn(
-            "SambaNovaCloudEmbeddings is deprecated and will be removed "
-            "in a future version. Use SambaNovaEmbeddings instead.",
-            DeprecationWarning,
-            stacklevel=2,
-        )
-        """init and validate environment variables"""
+        """Init and validate environment variables."""
         url = get_from_dict_or_env(
             kwargs,
             "sambanova_url",
@@ -574,6 +574,11 @@ class SambaNovaCloudEmbeddings(BaseModel, Embeddings):
         return embedding
 
 
+@deprecated(
+    since="0.2.0",
+    alternative="langchain_sambanova.SambaNovaEmbeddings",
+    removal="1.0.0",
+)
 class SambaStudioEmbeddings(BaseModel, Embeddings):
     """SambaStudio embedding models.
 
@@ -659,13 +664,7 @@ class SambaStudioEmbeddings(BaseModel, Embeddings):
         }
 
     def __init__(self, **kwargs: Any) -> None:
-        warnings.warn(
-            "SambaNovaStudioEmbeddings is deprecated and will be removed "
-            "in a future version. Use SambaNovaEmbeddings instead.",
-            DeprecationWarning,
-            stacklevel=2,
-        )
-        """init and validate environment variables"""
+        """Init and validate environment variables."""
         url = get_from_dict_or_env(kwargs, "sambastudio_url", "SAMBASTUDIO_URL")
         if "api/v2/predict/generic" not in url and "api/predict/generic" not in url:
             # if not generic sent is considered openAI compatible API
