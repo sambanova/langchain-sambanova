@@ -1,4 +1,8 @@
-from langchain_sambanova.chat_models import ChatSambaNovaCloud, ChatSambaStudio
+from langchain_sambanova.chat_models import (
+    ChatSambaNova,
+    ChatSambaNovaCloud,
+    ChatSambaStudio,
+)
 from langchain_sambanova.embeddings import (
     SambaNovaCloudEmbeddings,
     SambaNovaEmbeddings,
@@ -7,6 +11,7 @@ from langchain_sambanova.embeddings import (
 from langchain_sambanova.version import __version__
 
 __all__ = [
+    "ChatSambaNova",
     "ChatSambaNovaCloud",
     "ChatSambaStudio",
     "SambaNovaCloudEmbeddings",
