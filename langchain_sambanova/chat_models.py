@@ -415,7 +415,7 @@ class ChatSambaNova(BaseChatModel):
     """SambaNova api key Automatically inferred from env var
         ``SAMBANOVA_API_KEY`` if not provided."""
 
-    model: str = Field(default="Llama-4-Maverick-17B-128E-Instruct")
+    model_name: str = Field(default="Llama-4-Maverick-17B-128E-Instruct", alias="model")
     """The name of the model"""
 
     max_tokens: int = Field(default=1024)
@@ -562,7 +562,7 @@ class ChatSambaNova(BaseChatModel):
         params = self._get_invocation_params(stop=stop, **kwargs)
         ls_params = LangSmithParams(
             ls_provider="sambanova",
-            ls_model_name=params.get("model", self.model),
+            ls_model_name=params.get("model", self.model_name),
             ls_model_type="chat",
             ls_temperature=params.get("temperature", self.temperature),
         )
@@ -635,7 +635,7 @@ class ChatSambaNova(BaseChatModel):
             generation_info = {}
             if finish_reason := choice.get("finish_reason"):
                 generation_info["finish_reason"] = finish_reason
-                generation_info["model_name"] = self.model
+                generation_info["model_name"] = self.model_name
                 if system_fingerprint := chunk.get("system_fingerprint"):
                     generation_info["system_fingerprint"] = system_fingerprint
                 reasoning_effort = (
@@ -681,7 +681,7 @@ class ChatSambaNova(BaseChatModel):
             generation_info = {}
             if finish_reason := choice.get("finish_reason"):
                 generation_info["finish_reason"] = finish_reason
-                generation_info["model_name"] = self.model
+                generation_info["model_name"] = self.model_name
                 if system_fingerprint := chunk.get("system_fingerprint"):
                     generation_info["system_fingerprint"] = system_fingerprint
                 reasoning_effort = (
@@ -712,7 +712,7 @@ class ChatSambaNova(BaseChatModel):
     def _default_params(self) -> dict[str, Any]:
         """Get the default parameters for calling SambaNova API."""
         exclude_if_none: dict = {
-            "model": self.model,
+            "model": self.model_name,
             "max_tokens": self.max_tokens,
             "temperature": self.temperature,
             "top_p": self.top_p,
@@ -742,7 +742,7 @@ class ChatSambaNova(BaseChatModel):
                         overall_token_usage[k] = v
             if system_fingerprint is None:
                 system_fingerprint = output.get("system_fingerprint")
-        combined = {"token_usage": overall_token_usage, "model_name": self.model}
+        combined = {"token_usage": overall_token_usage, "model_name": self.model_name}
         if system_fingerprint:
             combined["system_fingerprint"] = system_fingerprint
         return combined
@@ -784,7 +784,7 @@ class ChatSambaNova(BaseChatModel):
             generations.append(gen)
         llm_output = {
             "token_usage": token_usage,
-            "model_name": self.model,
+            "model_name": self.model_name,
             "system_fingerprint": response.get("system_fingerprint", ""),
         }
         reasoning_effort = params.get("reasoning_effort") or self.reasoning_effort
