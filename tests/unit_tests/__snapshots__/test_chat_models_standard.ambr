@@ -1,0 +1,101 @@
+# serializer version: 1
+# name: TestSambaNovaCloudStandard.test_serdes[serialized]
+  dict({
+    'id': list([
+      'langchain_sambanova',
+      'chat_models',
+      'ChatSambaNovaCloud',
+    ]),
+    'kwargs': dict({
+      'max_tokens': 100,
+      'model': 'Llama-4-Maverick-17B-128E-Instruct',
+      'sambanova_api_key': dict({
+        'id': list([
+          'sambanova_api_key',
+        ]),
+        'lc': 1,
+        'type': 'secret',
+      }),
+      'sambanova_url': 'https://api.sambanova.ai/v1/chat/completions',
+      'stream_options': dict({
+        'include_usage': True,
+      }),
+      'temperature': 0.0,
+    }),
+    'lc': 1,
+    'name': 'ChatSambaNovaCloud',
+    'type': 'constructor',
+  })
+# ---
+# name: TestSambaNovaStandard.test_serdes[serialized]
+  dict({
+    'id': list([
+      'langchain_sambanova',
+      'chat_models',
+      'ChatSambaNova',
+    ]),
+    'kwargs': dict({
+      'max_retries': 2,
+      'max_tokens': 100,
+      'model_name': 'Llama-4-Maverick-17B-128E-Instruct',
+      'request_timeout': 60.0,
+      'sambanova_api_key': dict({
+        'id': list([
+          'SAMBANOVA_API_KEY',
+        ]),
+        'lc': 1,
+        'type': 'secret',
+      }),
+      'stop': list([
+      ]),
+      'temperature': 0.0,
+    }),
+    'lc': 1,
+    'name': 'ChatSambaNova',
+    'type': 'constructor',
+  })
+# ---
+# name: TestSambaStudioStandard.test_serdes[serialized]
+  dict({
+    'id': list([
+      'langchain_sambanova',
+      'chat_models',
+      'ChatSambaStudio',
+    ]),
+    'kwargs': dict({
+      'max_tokens': 100,
+      'model': 'Llama-4-Maverick-17B-128E-Instruct',
+      'process_prompt': True,
+      'sambastudio_api_key': dict({
+        'id': list([
+          'sambastudio_api_key',
+        ]),
+        'lc': 1,
+        'type': 'secret',
+      }),
+      'sambastudio_url': dict({
+        'id': list([
+          'sambastudio_url',
+        ]),
+        'lc': 1,
+        'type': 'secret',
+      }),
+      'special_tokens': dict({
+        'end': '''
+          <|start_header_id|>assistant<|end_header_id|>
+  
+        ''',
+        'end_role': '<|eot_id|>',
+        'start': '<|begin_of_text|>',
+        'start_role': '<|begin_of_text|><|start_header_id|>{role}<|end_header_id|>',
+      }),
+      'stream_options': dict({
+        'include_usage': True,
+      }),
+      'temperature': 0.0,
+    }),
+    'lc': 1,
+    'name': 'ChatSambaStudio',
+    'type': 'constructor',
+  })
+# ---
