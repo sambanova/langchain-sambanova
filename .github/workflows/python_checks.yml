@@ -21,7 +21,7 @@ on:
     - cron: '0 12 * * 1'
 
 env:
-  POETRY_VERSION: "1.9.0"
+  POETRY_VERSION: "1.8.2"
   POETRY_URL: https://install.python-poetry.org
 
 jobs:
