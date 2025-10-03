@@ -1,6 +1,5 @@
 """Test SambaNova Chat API wrapper."""
 
-import json
 import os
 from typing import Any
 from unittest.mock import AsyncMock, MagicMock, patch
@@ -29,7 +28,7 @@ def test_initialization() -> None:
 def test_sambanova_model_param() -> None:
     llm = ChatSambaNova(model="foo")
     assert llm.model_name == "foo"
-    llm = ChatSambaNova(model_name="foo")
+    llm = ChatSambaNova(model="foo")
     assert llm.model_name == "foo"
 
 
@@ -234,8 +233,10 @@ def test_chat_sambanova_secret() -> None:
     secret = "secretKey"  # noqa: S105
     not_secret = "safe"  # noqa: S105
     llm = ChatSambaNova(
-        model="test-model", api_key=secret, model_kwargs={"not_secret": not_secret}
-    )  # type: ignore[call-arg, arg-type]
+        model="test-model",
+        api_key=secret,  # type: ignore[arg-type]
+        model_kwargs={"not_secret": not_secret},
+    )
     stringified = str(llm)
     assert not_secret in stringified
     assert secret not in stringified
