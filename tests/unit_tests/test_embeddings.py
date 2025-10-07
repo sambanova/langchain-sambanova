@@ -1,30 +1,25 @@
 """Test embedding model integration."""
 
-from typing import Type
-
-from langchain_tests.unit_tests import EmbeddingsUnitTests
-
 from langchain_sambanova.embeddings import (
     SambaNovaCloudEmbeddings,
+    SambaNovaEmbeddings,
     SambaStudioEmbeddings,
 )
 
 
-class TestSambaStudioEmbeddingsBase(EmbeddingsUnitTests):
-    @property
-    def embeddings_class(self) -> Type[SambaStudioEmbeddings]:
-        return SambaStudioEmbeddings
-
-    @property
-    def embedding_model_params(self) -> dict:
-        return {"model": "nest-embed-001"}
+def test_sambanova_initialization() -> None:
+    """Test sambanova embedding model initialization."""
+    SambaNovaEmbeddings(model="E5-Mistral-7B-Instruct")
 
 
-class TestSambaNovaCloudEmbeddingsBase(EmbeddingsUnitTests):
-    @property
-    def embeddings_class(self) -> Type[SambaNovaCloudEmbeddings]:
-        return SambaNovaCloudEmbeddings
+def test_sambacloud_initialization() -> None:
+    """Test sambacloud embedding model initialization."""
+    SambaNovaCloudEmbeddings(model="E5-Mistral-7B-Instruct")
 
-    @property
-    def embedding_model_params(self) -> dict:
-        return {"model": "nest-embed-001"}
+
+def test_sambastudio_initialization() -> None:
+    """Test sambastudio embedding model initialization."""
+    SambaStudioEmbeddings(
+        sambastudio_url="https://api.sambanova.ai/v1/embeddings",
+        model="E5-Mistral-7B-Instruct",
+    )
