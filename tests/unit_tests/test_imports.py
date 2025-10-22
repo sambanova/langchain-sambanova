@@ -1,13 +1,13 @@
 from langchain_sambanova import __all__
 
 EXPECTED_ALL = [
-    "__version__",
     "ChatSambaNova",
     "ChatSambaNovaCloud",
     "ChatSambaStudio",
-    "SambaNovaEmbeddings",
     "SambaNovaCloudEmbeddings",
+    "SambaNovaEmbeddings",
     "SambaStudioEmbeddings",
+    "__version__",
 ]
 
 

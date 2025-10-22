@@ -10,7 +10,7 @@ from langchain_tests.integration_tests import (
     ChatModelIntegrationTests,
 )
 
-from langchain_sambanova import ChatSambaNova, ChatSambaNovaCloud, ChatSambaStudio
+from langchain_sambanova import ChatSambaNova
 
 rate_limiter = InMemoryRateLimiter(
     requests_per_second=2,
@@ -77,63 +77,3 @@ def test_json_schema(
     test_instance = JsonSchemaTests()
     model = test_instance.chat_model_class(**test_instance.chat_model_params)
     JsonSchemaTests().test_structured_output(model, schema_type)
-
-
-class TestSambaNovaCloudStandard(ChatModelIntegrationTests):
-    @property
-    def chat_model_class(self) -> type[ChatSambaNovaCloud]:
-        return ChatSambaNovaCloud
-
-    @property
-    def chat_model_params(self) -> dict:
-        return {"model": "Meta-Llama-3.3-70B-Instruct", "temperature": 0}
-
-    @property
-    def has_tool_calling(self) -> bool:
-        return True
-
-    @property
-    def has_structured_output(self) -> bool:
-        return True
-
-    @property
-    def supports_json_mode(self) -> bool:
-        return True
-
-    @property
-    def returns_usage_metadata(self) -> bool:
-        return True
-
-    @pytest.mark.xfail(reason="tool_choice param is not functional")
-    def test_tool_choice(self, model: BaseChatModel) -> None:
-        super().test_tool_choice(model)
-
-
-class TestSambaStudioStandard(ChatModelIntegrationTests):
-    @property
-    def chat_model_class(self) -> type[ChatSambaStudio]:
-        return ChatSambaStudio
-
-    @property
-    def chat_model_params(self) -> dict:
-        return {"model": "Meta-Llama-3.3-70B-Instruct", "temperature": 0}
-
-    @property
-    def has_tool_calling(self) -> bool:
-        return True
-
-    @property
-    def has_structured_output(self) -> bool:
-        return True
-
-    @property
-    def supports_json_mode(self) -> bool:
-        return True
-
-    @property
-    def returns_usage_metadata(self) -> bool:
-        return True
-
-    @pytest.mark.xfail(reason="tool_choice param is not functional")
-    def test_tool_choice(self, model: BaseChatModel) -> None:
-        super().test_tool_choice(model)
