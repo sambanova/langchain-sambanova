@@ -18,6 +18,7 @@
         'lc': 1,
         'type': 'secret',
       }),
+      'sambanova_integration_source': 'langchain',
       'stop': list([
       ]),
       'temperature': 0.0,

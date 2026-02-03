@@ -464,6 +464,12 @@ class ChatSambaNova(BaseChatModel):
     model_kwargs: dict[str, Any] = Field(default_factory=dict)
     """Key word arguments to pass to the model."""
 
+    sambanova_integration_source: str = Field(
+        default="langchain", alias="integration_source"
+    )
+    """Integration source for analytics. Override only when building a
+        higher-level integration on top of langchain_sambanova."""
+
     model_config = ConfigDict(populate_by_name=True, protected_namespaces=())
 
     @model_validator(mode="before")
@@ -510,6 +516,7 @@ class ChatSambaNova(BaseChatModel):
             "max_retries": self.max_retries,
             "default_headers": self.default_headers,
             "default_query": self.default_query,
+            "integration_source": self.sambanova_integration_source,
         }
 
         if not (self.client or None):
