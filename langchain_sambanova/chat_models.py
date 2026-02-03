@@ -1227,7 +1227,20 @@ def _convert_message_to_dict(message: BaseMessage) -> dict:
     elif isinstance(message, HumanMessage):
         message_dict = {"role": "user", "content": message.content}
     elif isinstance(message, AIMessage):
-        message_dict = {"role": "assistant", "content": message.content}
+        # Handle v1 output format (content_blocks) if present
+        if message.response_metadata.get("output_version") == "v1":
+            # Extract text from content blocks, skip tool_call blocks
+            text_parts: list[str] = []
+            for block in message.content_blocks:
+                if isinstance(block, dict) and block.get("type") == "text":
+                    text_value = block.get("text", "")
+                    if isinstance(text_value, str):
+                        text_parts.append(text_value)
+            content = "".join(text_parts)
+        else:
+            # Ensure content is a string (it can be str or list in some cases)
+            content = message.content if isinstance(message.content, str) else ""
+        message_dict = {"role": "assistant", "content": content}
         if message.tool_calls or message.invalid_tool_calls:
             message_dict["tool_calls"] = [
                 _lc_tool_call_to_sambanova_tool_call(tc) for tc in message.tool_calls
