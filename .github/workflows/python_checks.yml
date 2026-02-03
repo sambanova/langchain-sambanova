@@ -41,7 +41,7 @@ jobs:
           python-version: ${{ matrix.python-version }}
         id: setup_python
 
- # Cache Poetry dependencies
+      # Cache Poetry dependencies
       - name: Cache Poetry dependencies
         uses: actions/cache@v4
         with:
