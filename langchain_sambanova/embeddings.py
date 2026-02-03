@@ -147,6 +147,12 @@ class SambaNovaEmbeddings(BaseModel, Embeddings):
     """Optional ``httpx.AsyncClient``. Only used for async invocations. Must specify
         ``http_client`` as well if you'd like a custom client for sync invocations."""
 
+    sambanova_integration_source: str = Field(
+        default="langchain", alias="integration_source"
+    )
+    """Integration source for analytics. Override only when building a
+        higher-level integration on top of langchain_sambanova."""
+
     model_config = ConfigDict(
         extra="forbid", populate_by_name=True, protected_namespaces=()
     )
@@ -195,6 +201,7 @@ class SambaNovaEmbeddings(BaseModel, Embeddings):
             "max_retries": self.max_retries,
             "default_headers": self.default_headers,
             "default_query": self.default_query,
+            "integration_source": self.sambanova_integration_source,
         }
         if not (self.client or None):
             sync_specific: dict[str, Any] = (
