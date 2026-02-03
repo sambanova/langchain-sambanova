@@ -116,7 +116,7 @@ def test__convert_dict_to_message_tool_call() -> None:
                 name="get_time",
                 args="time",
                 id="call_bd254d722a8d471fac",
-                error="Function get_time arguments:\n\ntime\n\nare not valid JSON. Received JSONDecodeError Expecting value: line 1 column 1 (char 0)\nFor troubleshooting, visit: https://python.langchain.com/docs/troubleshooting/errors/OUTPUT_PARSING_FAILURE ",  # noqa: E501
+                error="Function get_time arguments:\n\ntime\n\nare not valid JSON. Received JSONDecodeError Expecting value: line 1 column 1 (char 0)\nFor troubleshooting, visit: https://docs.langchain.com/oss/python/langchain/errors/OUTPUT_PARSING_FAILURE ",  # noqa: E501
                 type="invalid_tool_call",
             ),
         ],
@@ -253,6 +253,7 @@ def test_sambanova_serialization() -> None:
         dump,
         valid_namespaces=["langchain_sambanova"],
         secrets_map={"SAMBANOVA_API_KEY": api_key2},
+        allowed_objects=[ChatSambaNova],
     )
 
     assert type(llm2) is ChatSambaNova
