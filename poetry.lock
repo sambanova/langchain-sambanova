@@ -1547,14 +1547,14 @@ files = [
 
 [[package]]
 name = "sambanova"
-version = "1.4.0"
+version = "1.9.1"
 description = "The official Python library for the SambaNova API"
 optional = false
 python-versions = ">=3.9"
 groups = ["main"]
 files = [
-    {file = "sambanova-1.4.0-py3-none-any.whl", hash = "sha256:c6988a7f27371fbab67cea1fc83a44b84b1b61b5ded703ff035a0d4c82cfa0d8"},
-    {file = "sambanova-1.4.0.tar.gz", hash = "sha256:0b4a58c0f3b72da5b1edf80b559951a38d65f5bf77a7082219109e1a243aea2e"},
+    {file = "sambanova-1.9.1-py3-none-any.whl", hash = "sha256:3bb683b6a1e0570c6dfbbbb9d0b7aa4386b3c327ff399427d499aaf5e73b203e"},
+    {file = "sambanova-1.9.1.tar.gz", hash = "sha256:481445e9ca983ee50104531a701b951248e2570a4663554e0266ca6f90c36de8"},
 ]
 
 [package.dependencies]
@@ -1563,7 +1563,7 @@ distro = ">=1.7.0,<2"
 httpx = ">=0.23.0,<1"
 pydantic = ">=1.9.0,<3"
 sniffio = "*"
-typing-extensions = ">=4.10,<5"
+typing-extensions = ">=4.14,<5"
 
 [package.extras]
 aiohttp = ["aiohttp", "httpx-aiohttp (>=0.1.9)"]
@@ -2175,4 +2175,4 @@ cffi = ["cffi (>=1.17,<2.0) ; platform_python_implementation != \"PyPy\" and pyt
 [metadata]
 lock-version = "2.1"
 python-versions = ">=3.10.0,<4.0"
-content-hash = "8d74ea16219751c3d7b5dd760c02bc16976612b59ffc7d70cbcaf1b3d4aa46ac"
+content-hash = "b00d59c04a0ce81084efc222aa6b7666d3c262137f016009c7374b5c2b2a2c74"
