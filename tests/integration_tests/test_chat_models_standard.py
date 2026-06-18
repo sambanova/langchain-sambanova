@@ -25,7 +25,7 @@ class TestSambaNovaStandard(ChatModelIntegrationTests):
     @property
     def chat_model_params(self) -> dict:
         return {
-            "model": "Llama-4-Maverick-17B-128E-Instruct",
+            "model": "gemma-4-31B-it",
             "rate_limiter": rate_limiter,
         }
 
@@ -66,7 +66,7 @@ def test_json_schema(
         @property
         def chat_model_params(self) -> dict:
             return {
-                "model": "Llama-4-Maverick-17B-128E-Instruct",
+                "model": "gemma-4-31B-it",
                 "rate_limiter": rate_limiter,
             }
 

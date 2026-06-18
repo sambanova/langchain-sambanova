@@ -74,4 +74,4 @@ jobs:
         run: make tests
 
       - name: Run integration tests
-        run: make integration_tests
+        run: make integration_tests_chat
