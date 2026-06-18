@@ -1,4 +1,4 @@
-.PHONY: all format lint test tests integration_tests docker_tests help extended_tests
+.PHONY: all format lint test tests integration_tests integration_tests_chat docker_tests help extended_tests
 
 # Default target executed when no arguments are given to make.
 all: help
@@ -18,6 +18,12 @@ test_watch:
 # integration tests are run without the --disable-socket flag to allow network calls
 integration_test integration_tests:
 	poetry run pytest $(TEST_FILE)
+
+# chat-only integration tests (embeddings models currently unavailable)
+integration_tests_chat:
+	poetry run pytest tests/integration_tests/ \
+		--ignore=tests/integration_tests/test_embeddings.py \
+		--ignore=tests/integration_tests/test_embeddings_standard.py
 
 ######################
 # LINTING AND FORMATTING
@@ -62,3 +68,4 @@ help:
 	@echo 'test                         - run unit tests'
 	@echo 'tests                        - run unit tests'
 	@echo 'test TEST_FILE=<test_file>   - run all tests in file'
+	@echo 'integration_tests_chat       - run integration tests excluding embeddings'

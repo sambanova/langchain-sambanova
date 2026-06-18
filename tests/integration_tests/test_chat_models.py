@@ -14,7 +14,7 @@ from typing_extensions import TypedDict
 
 from langchain_sambanova import ChatSambaNova
 
-_MODEL = "Llama-4-Maverick-17B-128E-Instruct"
+_MODEL = "gemma-4-31B-it"
 
 
 def test_invoke() -> None:
