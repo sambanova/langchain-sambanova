@@ -629,7 +629,7 @@ class ChatSambaNova(BaseChatModel):
         for chunk in self.client.create(messages=message_dicts, **params):
             if not isinstance(chunk, dict):
                 chunk = chunk.model_dump()
-            if len(chunk["choices"]) == 0:
+            if not chunk["choices"]:
                 chunk["choices"] = [{"delta": {}}]
             choice = chunk["choices"][0]
             message_chunk = _convert_chunk_to_message_chunk(chunk, default_chunk_class)
@@ -675,7 +675,7 @@ class ChatSambaNova(BaseChatModel):
         ):
             if not isinstance(chunk, dict):
                 chunk = chunk.model_dump()
-            if len(chunk["choices"]) == 0:
+            if not chunk["choices"]:
                 chunk["choices"] = [{"delta": {}}]
             choice = chunk["choices"][0]
             message_chunk = _convert_chunk_to_message_chunk(chunk, default_chunk_class)
