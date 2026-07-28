@@ -1,0 +1,5 @@
+# Gitleaks config for langchain-sambanova. Extends the built-in default ruleset.
+title = "langchain-sambanova gitleaks config"
+
+[extend]
+useDefault = true
